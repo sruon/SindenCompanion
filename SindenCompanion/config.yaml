@@ -1,0 +1,54 @@
+﻿global:
+    recoil_on_switch: true
+    lightgun: "C:\\Users\\sruon\\OneDrive\\Bureau\\Sinden\\LightgunBeta2.05\\Lightgun.exe"
+    debug: true
+recoil_profiles:
+    - name: "Single"
+      automatic: false
+      pulse_length: 0
+      delay_between_pulses: 0
+      offscreen: false
+      strength: 50
+    - name: "Auto_Fast"
+      automatic: true
+      pulse_length: 40
+      delay_between_pulses: 3
+      offscreen: false
+      strength: 3
+    - name: "Auto_Default"
+      automatic: true
+      pulse_length: 50
+      delay_between_pulses: 9
+      offscreen: false
+      strength: 3
+    - name: "Auto_Strong"
+      automatic: true
+      pulse_length: 60
+      delay_between_pulses: 13
+      offscreen: false
+      strength: 3
+game_profiles:
+    - name: "VS"
+      profile: "Auto_Fast"
+      match:
+        exe: "devenv.exe"
+    - name: "Notepad"
+      profile: "Auto_Strong"
+      match:
+        exe: "Notepad.exe"
+    - name: "Sinden"
+      profile: "Single"
+      match:
+        title: "SindenLightgun"
+    - name: "Assault Cube"
+      profile: "Single"
+      match:
+        exe: "ac_client.exe"
+      memscan:
+        code: ac_client.exe+0x0018AC00,0x364,0x4
+        size: 1
+        match: 
+          0x0: "Single" # Knife
+          0x1: "Single" # Glock
+          0x6: "Auto_Fast" # AR
+          0x7: "Single" # Sniper

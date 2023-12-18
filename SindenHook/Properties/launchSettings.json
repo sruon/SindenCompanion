@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Profile 1": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Users\\sruon\\OneDrive\\Bureau\\Sinden\\LightgunBeta2.05\\Lightgun.exe",
+      "workingDirectory": "C:\\Users\\sruon\\OneDrive\\Bureau\\Sinden\\LightgunBeta2.05\\"
+    }
+  }
+}
