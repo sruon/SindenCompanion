@@ -27,6 +27,9 @@ jobs:
     - name: Create Build Directory
       run: mkdir _build
 
+    - name: Create Build Directory
+      run: ls
+
     - name: Restore Packages
       run: nuget restore SindenCompanion.sln
 
