@@ -74,4 +74,8 @@
     </None>
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy &quot;$(TargetDir)\SindenCompanion.exe&quot; ..\build\&#xD;&#xA;copy &quot;$(TargetDir)\config.yaml&quot; ..\build\&#xD;&#xA;copy &quot;$(TargetDir)\SindenHook.dll&quot; ..\build\" />
+  </Target>
+
 </Project>
