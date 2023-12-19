@@ -1,0 +1,38 @@
+name: SindenCompanion Build
+
+on: 
+  push: 
+    branches: master
+
+jobs: 
+  build: 
+    runs-on: windows-2019
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1
+
+    - uses: nuget/setup-nuget@v1
+  
+    - name: Navigate to Workspace
+      run: cd $GITHUB_WORKSPACE
+
+    - name: Download Sinden Drivers
+      run: |
+        Invoke-WebRequest https://www.sindenlightgun.com/software/SindenLightgunWindowsSoftwareV2.05beta.zip -OutFile sinden.zip
+        Expand-Archive .\sinden.zip -DestinationPath .\sinden
+        cp .\sinden\LightgunBeta2.05\Lightgun.exe
+
+    - name: Create Build Directory
+      run: mkdir _build
+
+    - name: Create Build Directory
+      run: ls
+
+    - name: Restore Packages
+      run: nuget restore SindenCompanion.sln
+
+    - name: Build Solution
+      run: |
+        msbuild.exe SindenCompanion.sln /nologo /nr:false /p:platform="x64" /p:configuration="Release" /p:ReferencePath="." /p:PublishUrl="../_build"
