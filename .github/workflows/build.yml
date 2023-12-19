@@ -1,0 +1,31 @@
+name: SindenCompanion Build
+
+on: 
+  push: 
+    branches: master
+
+jobs: 
+  build: 
+    runs-on: windows-2019
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1
+
+    - uses: nuget/setup-nuget@v1
+  
+    - name: Navigate to Workspace
+      run: cd $GITHUB_WORKSPACE
+
+    - name: Create Build Directory
+      run: mkdir _build
+
+
+    - name: Restore Packages
+      run: nuget restore SindenCompanion/SindenCompanion.sln
+
+    - name: Build Solution
+      run: |
+        msbuild.exe SindenCompanion/SindenCompanion.sln /nologo /nr:false /p:platform="x64" /p:configuration="Release" /p:PublishUrl="../_build"
