@@ -3,7 +3,12 @@ name: SindenCompanion Build
 on: 
   push: 
     branches: master
-
+    paths:
+      - '**.cs'
+      - '**.sln'
+      - '**.yaml'
+      - '**.csproj'
+      - '.github/workflows/build.yml'
 jobs: 
   build: 
     runs-on: windows-2019
@@ -38,10 +43,14 @@ jobs:
       run: |
         msbuild.exe SindenCompanion.sln /nologo /nr:false /p:platform="x64" /p:configuration="Release" /p:PublishUrl="../_build"
 
+    - name: Create release archive
+      run: |
+        Compress-Archive -Path .\build\* -DestinationPath ".\SindenCompanion-${{ steps.tag_version.outputs.new_tag }}.zip"
+
     - name: Create release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: "build/SindenCompanion.exe,build/SindenHook.dll,build/config.yaml"
+        artifacts: "SindenCompanion-${{ steps.tag_version.outputs.new_tag }}.zip"
         tag: ${{ steps.tag_version.outputs.new_tag }}
         name: Release ${{ steps.tag_version.outputs.new_tag }}
         body: ${{ steps.tag_version.outputs.changelog }}
