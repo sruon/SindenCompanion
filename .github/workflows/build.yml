@@ -10,7 +10,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: engineerd/configurator@v0.0.1
+    - uses: engineerd/configurator@v0.0.10
       with:
         name: "Lightgun.exe"
         url: "https://www.sindenlightgun.com/software/SindenLightgunWindowsSoftwareV2.05beta.zip"
