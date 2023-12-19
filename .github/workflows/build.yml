@@ -18,11 +18,11 @@ jobs:
     - name: Navigate to Workspace
       run: cd $GITHUB_WORKSPACE
 
-    - uses: engineerd/configurator@v0.0.10
-      with:
-        name: "Lightgun.exe"
-        url: "https://www.sindenlightgun.com/software/SindenLightgunWindowsSoftwareV2.05beta.zip"
-        pathInArchive: "LightgunBeta2.05/Lightgun.exe"
+    - name: Download Sinden Drivers
+      run: |
+        Invoke-WebRequest https://www.sindenlightgun.com/software/SindenLightgunWindowsSoftwareV2.05beta.zip -OutFile sinden.zip
+        Expand-Archive .\sinden.zip -DestinationPath .\sinden
+        cp .\sinden\LightgunBeta2.05\Lightgun.exe
 
     - name: Create Build Directory
       run: mkdir _build
