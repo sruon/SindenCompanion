@@ -10,6 +10,12 @@
 - Pass port as argument to DLL
 - FreeLibraryAndExitThread when crashed or requested to exit
 
+## Getting started
+- Download the most recent release from the release page
+- Unzip the content in the same folder as Lightgun.exe
+- Start SindenCompanion.exe
+- You may need to add the binary to your antivirus/Microsoft Defender exception list as the included memory reader and DLL injector are identified as threats
+
 ## Features
 - Executable name and/or Window title recoil profile switching
 - Dynamic recoil profile switching based on memory values
@@ -45,7 +51,7 @@ recoil_profiles:
     # Strength of recoil where X is Weakest and Y is Strongest
       strength: 50
     # Delay after first pulse where X is shortest and Y is longest
-	  delay_after_first_pulse: 0
+      delay_after_first_pulse: 0
     # Pump recoil on event
       pump_on: false
     # Pump recoil off event
@@ -56,7 +62,7 @@ recoil_profiles:
       recoil_back_left: false
       recoil_back_right: false
 game_profiles:
-	# List of game profiles
+    # List of game profiles
     # Name of the profile
     - name: "Game 1"
     # Recoil profile to use - this does not apply if using memory reader
