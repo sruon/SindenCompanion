@@ -38,7 +38,7 @@
 
   <ItemGroup>
     <Reference Include="Lightgun">
-      <HintPath>..\..\..\..\OneDrive\Bureau\Sinden\LightgunBeta2.05\Lightgun.exe</HintPath>
+      <HintPath>..\Lightgun.exe</HintPath>
       <Private>False</Private>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
