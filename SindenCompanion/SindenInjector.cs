@@ -7,11 +7,12 @@ using Serilog;
 
 namespace SindenCompanion
 {
-    internal class SindenInjector
+    internal class SindenInjector : IDisposable
     {
         private Process process;
         private string libraryPath;
         private ILogger _logger;
+        private bool _started;
         public SindenInjector(string lightgunPath, ILogger logger)
         {
             _logger = logger;
@@ -23,7 +24,7 @@ namespace SindenCompanion
                 _logger.Warning("Could not find Lightgun.exe, starting it now. {@Path}", lightgunPath);
                 Process newProcess = new Process();
                 newProcess.StartInfo = new ProcessStartInfo(lightgunPath);
-                newProcess.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
+                //newProcess.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
                 newProcess.StartInfo.WorkingDirectory = Path.GetDirectoryName(lightgunPath);
                 try
                 {
@@ -33,6 +34,7 @@ namespace SindenCompanion
                     _logger.Error("Failed to start Lightgun.exe {@Exc}", ex);
                     throw ex;
                 }
+                _started = true;
 
             } else if (localByName.Length == 0)
             {
@@ -41,6 +43,13 @@ namespace SindenCompanion
             } else
             {
                 process = localByName[0];
+            }
+        }
+
+        public void Dispose() {
+            if (process != null && _started)
+            {
+                process.Kill();
             }
         }
 

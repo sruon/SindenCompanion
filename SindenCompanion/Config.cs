@@ -10,22 +10,22 @@ namespace SindenCompanion
 
 {   public class Config
     {
-        private static Config Instance = null;
-        private static FileSystemWatcher fw = null;
+        private static Config _instance = null;
+        private static FileSystemWatcher _fw = null;
         public static Config GetInstance()
         {
-            if (Instance != null) {
-                return Instance;
+            if (_instance != null) {
+                return _instance;
             }
-            if (fw == null) { 
-                fw = new FileSystemWatcher();
-                fw.Path = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-                fw.Filter = "config.yaml";
-                fw.Changed += new FileSystemEventHandler((e, a) => {
+            if (_fw == null) { 
+                _fw = new FileSystemWatcher();
+                _fw.Path = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                _fw.Filter = "config.yaml";
+                _fw.Changed += new FileSystemEventHandler((e, a) => {
                     Console.WriteLine("Detected change to config file.");
-                    Instance = null; 
+                    _instance = null; 
                 });
-                fw.EnableRaisingEvents = true;
+                _fw.EnableRaisingEvents = true;
             }
 
             Console.WriteLine("Loading configuration.");
@@ -36,14 +36,14 @@ namespace SindenCompanion
                     var deserializer = new DeserializerBuilder()
                                             .WithNamingConvention(UnderscoredNamingConvention.Instance)
                                             .Build();
-                    Instance = deserializer.Deserialize<Config>(streamReader.ReadToEnd());
+                    _instance = deserializer.Deserialize<Config>(streamReader.ReadToEnd());
                 } catch (Exception ex)
                 {
                     Console.WriteLine($"Failed to instantiate configuration: {ex}");
                     throw ex;
                 }
             }
-            return Instance;
+            return _instance;
         }
 
         public List<RecoilProfile> RecoilProfiles { get; set; }
@@ -64,8 +64,6 @@ namespace SindenCompanion
         public string Lightgun {  get; set; }
 
         public bool Debug { get; set; }
-
-        public bool LogToFile { get; set; }
 
         public Global()
         {

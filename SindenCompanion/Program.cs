@@ -2,6 +2,7 @@
 using SindenCompanionShared;
 using System.Linq;
 using System.Collections.Generic;
+using System.Dynamic;
 using Serilog;
 using Memory;
 using System.Runtime.InteropServices;
@@ -10,7 +11,7 @@ using System.Threading;
 
 namespace SindenCompanion
 {
-    public class App
+    public class App : IDisposable
     {
         private Dictionary<uint, Mem> _memReaders;
         private Config _conf;
@@ -25,26 +26,31 @@ namespace SindenCompanion
             _server = new ServerInterface(true, _conf.Global.IpcPort, logger, MessageHandler);
         }
 
+        public void Dispose()
+        {
+            _server.Dispose();
+            foreach (var memlib in _memReaders.Values)
+            {
+                memlib.CloseProcess();
+            }
+        }
         private Mem GetMemoryReader(uint processId)
         {
-            Mem Memlib;
-            if (!_memReaders.TryGetValue(processId, out Memlib))
+            Mem memlib;
+            if (_memReaders.TryGetValue(processId, out memlib)) return memlib;
+            _memReaders[processId] = new Mem();
+            bool suc = _memReaders[processId].OpenProcess((int)processId, out var failReason);
+            if (!suc)
             {
-                string failReason;
-                _memReaders[processId] = new Mem();
-                bool suc = _memReaders[processId].OpenProcess((int)processId, out failReason);
-                if (!suc)
-                {
-                    _logger.Error("Failed to open process for memory reading: {@failReason}", failReason);
-                    throw new Exception("Failed to open process for memory reading");
-                }
-                else
-                {
-                    _logger.Information("Successfully opened process for memory reading");
-                    Memlib = _memReaders[processId];
-                }
+                _logger.Error("Failed to open process for memory reading: {@failReason}", failReason);
+                throw new Exception("Failed to open process for memory reading");
             }
-            return Memlib;
+            else
+            {
+                _logger.Information("Successfully opened process for memory reading");
+                memlib = _memReaders[processId];
+            }
+            return memlib;
         }
 
         public void WindowEventHandler(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
@@ -58,11 +64,11 @@ namespace SindenCompanion
                 RecoilProfile matchedRp = null;
                 if (matchedGp.Memscan != null) // Continuous swap based on memory
                 {
-                    Mem Memlib;
+                    Mem memlib;
 
                     try
                     {
-                        Memlib = GetMemoryReader(fp.ProcessId);
+                        memlib = GetMemoryReader(fp.ProcessId);
                     }
                     catch {
                         return;
@@ -70,7 +76,7 @@ namespace SindenCompanion
                     
                     while (true)
                     {
-                        int value = Memlib.ReadByte(matchedGp.Memscan.Code);
+                        int value = memlib.ReadByte(matchedGp.Memscan.Code);
                         string profName;
                         if (matchedGp.Memscan.Match.TryGetValue(value, out profName))
                         {
@@ -128,39 +134,32 @@ namespace SindenCompanion
         }
         public void MessageHandler(List<string> messages)
         {
-            foreach (string msg in messages)
+            foreach (var e in from msg in messages where !string.IsNullOrEmpty(msg) select MessageBuilder.FromMessage(msg))
             {
-                if (msg != null && msg != string.Empty)
+                switch (e.type)
                 {
-                    Enveloppe e = MessageBuilder.FromMessage(msg);
-                    switch (e.type)
-                    {
-                        case "recoilack":
-                            var recsuc = (bool)e.payload;
-                            if (!recsuc)
-                            {
-                                _logger.Error($"Failed to recoil");
-                            }
-                            else
-                            {
-                                _logger.Information($"Recoil ACK - Success {(bool)e.payload}");
-                            }
-                            break;
-                        case "profileack":
-                            var suc = (bool)e.payload;
-                            if (!suc)
-                            {
-                                _logger.Error($"Failed to apply profile, Sinden may still be initializing - will retry");
-                                _currentProfile = null;
-                            }
-                            else
-                            {
-                                _logger.Information("Successfully applied profile. {@Profile}", _currentProfile);
-                            }
-                            break;
-                        default:
-                            break;
-                    }
+                    case "recoilack":
+                        if (!(bool)e.payload)
+                        {
+                            _logger.Error($"Failed to recoil");
+                        }
+                        else
+                        {
+                            _logger.Information($"Recoil ACK - Success");
+                        }
+                        break;
+                    case "profileack":
+                        var suc = (bool)e.payload;
+                        if (!suc)
+                        {
+                            _logger.Error($"Failed to apply profile, Sinden may still be initializing - will retry");
+                            _currentProfile = null;
+                        }
+                        else
+                        {
+                            _logger.Information("Successfully applied profile. {@Profile}", _currentProfile);
+                        }
+                        break;
                 }
             }
         }
@@ -190,6 +189,11 @@ namespace SindenCompanion
 
             dele = new WinEventDelegate(app.WindowEventHandler);
             IntPtr m_hhook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, dele, 0, 0, WINEVENT_OUTOFCONTEXT);
+            Application.ApplicationExit += new EventHandler((s, a) =>
+            {
+                injector.Dispose();
+                app.Dispose();
+            });
             Application.EnableVisualStyles();
             Application.Run(mainForm);
         }

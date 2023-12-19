@@ -33,10 +33,10 @@
             this._richTextBoxPanel = new System.Windows.Forms.Panel();
             this.NotificationIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.NotificationIconMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.Exit = new System.Windows.Forms.ToolStripMenuItem();
+            this.showMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.bootMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuSeparator = new System.Windows.Forms.ToolStripSeparator();
+            this.exitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.NotificationIconMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -63,35 +63,37 @@
             // 
             this.NotificationIconMenu.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.NotificationIconMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem1,
-            this.toolStripMenuItem2,
-            this.toolStripSeparator1,
-            this.Exit});
+            this.showMenuItem,
+            this.bootMenuItem,
+            this.menuSeparator,
+            this.exitMenuItem});
             this.NotificationIconMenu.Name = "NotificationIconMenu";
             this.NotificationIconMenu.Size = new System.Drawing.Size(241, 139);
             // 
-            // toolStripMenuItem1
+            // showMenuItem
             // 
-            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(240, 32);
-            this.toolStripMenuItem1.Text = "Show";
+            this.showMenuItem.Name = "showMenuItem";
+            this.showMenuItem.Size = new System.Drawing.Size(240, 32);
+            this.showMenuItem.Text = "Show";
+            this.showMenuItem.Click += new System.EventHandler(this.showMenuItem_Click);
             // 
-            // toolStripMenuItem2
+            // bootMenuItem
             // 
-            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(240, 32);
-            this.toolStripMenuItem2.Text = "Start at boot";
+            this.bootMenuItem.Name = "bootMenuItem";
+            this.bootMenuItem.Size = new System.Drawing.Size(240, 32);
+            this.bootMenuItem.Text = "Start at boot";
             // 
-            // toolStripSeparator1
+            // menuSeparator
             // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(237, 6);
+            this.menuSeparator.Name = "menuSeparator";
+            this.menuSeparator.Size = new System.Drawing.Size(237, 6);
             // 
-            // Exit
+            // exitMenuItem
             // 
-            this.Exit.Name = "Exit";
-            this.Exit.Size = new System.Drawing.Size(240, 32);
-            this.Exit.Text = "Exit";
+            this.exitMenuItem.Name = "exitMenuItem";
+            this.exitMenuItem.Size = new System.Drawing.Size(240, 32);
+            this.exitMenuItem.Text = "Exit";
+            this.exitMenuItem.Click += new System.EventHandler(this.exitMenuItem_Click);
             // 
             // AppForm
             // 
@@ -113,9 +115,9 @@
         private System.Windows.Forms.Panel _richTextBoxPanel;
         private System.Windows.Forms.NotifyIcon NotificationIcon;
         private System.Windows.Forms.ContextMenuStrip NotificationIconMenu;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Windows.Forms.ToolStripMenuItem Exit;
+        private System.Windows.Forms.ToolStripMenuItem showMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem bootMenuItem;
+        private System.Windows.Forms.ToolStripSeparator menuSeparator;
+        private System.Windows.Forms.ToolStripMenuItem exitMenuItem;
     }
 }

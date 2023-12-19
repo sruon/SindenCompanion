@@ -24,21 +24,49 @@ namespace SindenHook
 
         public void Execute()
         {
-            Form f1;
-            try
+            Form f1 = null;
+            while (f1 == null)
             {
-                f1 = Application.OpenForms["Form1"];
-                _logger.Information("Found main app form");
+                Thread.Sleep(200);
+                try
+                {
+                    f1 = Application.OpenForms["Form1"];
+                }
+                catch (Exception ex)
+                {
+                    Enveloppe ev = MessageBuilder.Build("exception", ex);
+                    _client.SendMessage(ev.AsMessage());
+                }
             }
-            catch (Exception ex)
-            {
-                Enveloppe ev = MessageBuilder.Build("exception", ex);
-                _client.SendMessage(ev.AsMessage());
-                throw ex;
+            _logger.Information("Found main app form");
+
+
+            bool foundGuns = false;
+
+            while (!foundGuns) {
+                Thread.Sleep(200);
+
+                try
+                {
+                    FieldInfo type =
+                        typeof(Lightgun.Form1).GetField("listLightguns", BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (type != null)
+                    {
+                        Lightguns = (List<SindenLightgun>)type.GetValue(f1);
+                        _logger.Information("Found list of lightguns {@Count}", Lightguns.Count);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                    foundGuns = true;
+                }
+                catch (Exception ex)
+                {
+                    Enveloppe ev = MessageBuilder.Build("exception", ex);
+                    _client.SendMessage(ev.AsMessage());
+                }
             }
-            FieldInfo type = typeof(Lightgun.Form1).GetField("listLightguns", BindingFlags.NonPublic | BindingFlags.Instance);
-            Lightguns = (List<SindenLightgun>)type.GetValue(f1);
-            _logger.Information("Found list of lightguns {@Count}", Lightguns.Count);
 
             while (true)
             {
@@ -49,7 +77,7 @@ namespace SindenHook
         {
             foreach (string msg in messages)
             {
-                if (msg != null && msg != string.Empty)
+                if (!string.IsNullOrEmpty(msg))
                 {
                     Enveloppe e = MessageBuilder.FromMessage(msg);
                     Enveloppe ev;
@@ -100,22 +128,23 @@ namespace SindenHook
                             }
                             else
                             {
+                                bool success = false;
                                 foreach (SindenLightgun lightgun in Lightguns)
                                 {
-                                    lightgun.UpdateRecoilFromProfile(rp);
+                                    success = lightgun.UpdateRecoilFromProfile(rp);
+                                    if (success) continue;
+                                    _logger.Error($"Failed to apply profile to {lightgun.lightgunOwner.ToString()}");
+                                    break;
                                 }
-                                _lastProfile = rp;
-                                ev = MessageBuilder.Build("profileack", true);
+                                if (success) _lastProfile = rp;
+                                ev = MessageBuilder.Build("profileack", success);
                             }
                             _client.SendMessage(ev.AsMessage());
                             break;
-                        default:
-                            break;
                     }
                 }
-            
+            }
         }
-    }
         static int Run(string test)
         {
             EntryPoint app = new EntryPoint();

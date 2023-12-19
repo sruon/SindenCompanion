@@ -1,9 +1,9 @@
-﻿using NetMQ;
+﻿using System;
+using NetMQ;
 using NetMQ.Sockets;
 using System.Collections.Generic;
 using Serilog;
-using System.Net.Sockets;
-using System;
+
 
 namespace SindenCompanionShared
 {
@@ -12,7 +12,7 @@ namespace SindenCompanionShared
     /// <summary>
     /// Provides an interface for communicating from the client (target) to the server (injector)
     /// </summary>
-    public class ServerInterface
+    public class ServerInterface : IDisposable
     {
         PushSocket pusher;
         PullSocket puller;
@@ -44,6 +44,10 @@ namespace SindenCompanionShared
             poller.RunAsync();
         }
 
+        public void Dispose()
+        {
+            poller.StopAsync();
+        }
         public void SetLogger( ILogger logger )
         {
             _logger = logger;

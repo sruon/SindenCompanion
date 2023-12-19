@@ -11,12 +11,16 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Forms.Integration;
 using System.Windows.Media;
+using Application = System.Windows.Application;
+
 namespace SindenCompanion
 {
     public partial class AppForm : Form
     {
         private static readonly object _syncRoot = new object();
         public readonly System.Windows.Controls.RichTextBox WpfRichTextBox;
+
+        private bool _userRequestedClose = false;
         public AppForm()
         {
             InitializeComponent();
@@ -57,13 +61,27 @@ namespace SindenCompanion
 
         private void AppForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            e.Cancel = true;
-            Hide();
+            if (!_userRequestedClose)
+            {
+                e.Cancel = true;
+                Hide();
+            }
         }
 
         private void notificationIcon_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             Show();
+        }
+
+        private void showMenuItem_Click(object sender, EventArgs e)
+        {
+            Show();
+        }
+
+        private void exitMenuItem_Click(object sender, EventArgs e)
+        {
+            _userRequestedClose = true;
+            System.Windows.Forms.Application.Exit();
         }
     }
 }
