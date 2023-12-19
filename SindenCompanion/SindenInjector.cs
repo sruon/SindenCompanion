@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using HoLLy.ManagedInjector;
 using Serilog;
 
@@ -24,7 +25,7 @@ namespace SindenCompanion
                 _logger.Warning("Could not find Lightgun.exe, starting it now. {@Path}", lightgunPath);
                 Process newProcess = new Process();
                 newProcess.StartInfo = new ProcessStartInfo(lightgunPath);
-                //newProcess.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
+                newProcess.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
                 newProcess.StartInfo.WorkingDirectory = Path.GetDirectoryName(lightgunPath);
                 try
                 {
@@ -35,6 +36,8 @@ namespace SindenCompanion
                     throw ex;
                 }
                 _started = true;
+                // Give it some time to initialize the main form...
+                Thread.Sleep(2000);
 
             } else if (localByName.Length == 0)
             {
@@ -49,7 +52,14 @@ namespace SindenCompanion
         public void Dispose() {
             if (process != null && _started)
             {
-                process.Kill();
+                try
+                {
+                    process.Kill();
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error("Failed to kill Lightgun.exe {@Exc}", ex);
+                }
             }
         }
 

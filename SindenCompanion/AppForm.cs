@@ -62,12 +62,16 @@ namespace SindenCompanion
 
         private void notificationIcon_MouseDoubleClick(object sender, MouseEventArgs e)
         {
+            this.WindowState = FormWindowState.Minimized;
             Show();
+            this.WindowState = FormWindowState.Normal;
         }
 
         private void showMenuItem_Click(object sender, EventArgs e)
         {
+            this.WindowState = FormWindowState.Minimized;
             Show();
+            this.WindowState = FormWindowState.Normal;
         }
 
         private void exitMenuItem_Click(object sender, EventArgs e)
@@ -79,6 +83,34 @@ namespace SindenCompanion
         private void configFileMenuItem_Click(object sender, EventArgs e)
         {
             Process.Start($"{Directory.GetCurrentDirectory()}\\config.yaml");
+        }
+
+        private void bootMenuItem_Click(object sender, EventArgs e)
+        {
+            if (Startup.IsInStartup())
+            {
+                Startup.RemoveFromStartup();
+            }
+            else
+            {
+                Startup.RunOnStartup();
+            }
+
+            bootMenuItem.Checked = Startup.IsInStartup();
+        }
+
+        private void NotificationIconMenu_Opened(object sender, EventArgs e)
+        {
+            bootMenuItem.Checked = Startup.IsInStartup();
+        }
+
+        private void AppForm_Resize(object sender, EventArgs e)
+        {
+            if (this.WindowState == FormWindowState.Minimized)
+            {
+                Hide();
+                NotificationIcon.Visible = true;
+            }
         }
     }
 }

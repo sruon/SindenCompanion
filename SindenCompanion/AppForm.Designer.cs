@@ -72,7 +72,8 @@
             this.menuSeparatorBottom,
             this.exitMenuItem});
             this.NotificationIconMenu.Name = "NotificationIconMenu";
-            this.NotificationIconMenu.Size = new System.Drawing.Size(241, 177);
+            this.NotificationIconMenu.Size = new System.Drawing.Size(212, 144);
+            this.NotificationIconMenu.Opened += new System.EventHandler(this.NotificationIconMenu_Opened);
             // 
             // showMenuItem
             // 
@@ -86,6 +87,7 @@
             this.bootMenuItem.Name = "bootMenuItem";
             this.bootMenuItem.Size = new System.Drawing.Size(240, 32);
             this.bootMenuItem.Text = "Start at boot";
+            this.bootMenuItem.Click += new System.EventHandler(this.bootMenuItem_Click);
             // 
             // menuSeparatorBottom
             // 
@@ -121,6 +123,7 @@
             this.Text = "Sinden Companion";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.AppForm_FormClosing);
             this.Load += new System.EventHandler(this.AppForm_Load);
+            this.Resize += new System.EventHandler(this.AppForm_Resize);
             this.NotificationIconMenu.ResumeLayout(false);
             this.ResumeLayout(false);
 
