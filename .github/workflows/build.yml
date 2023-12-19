@@ -32,4 +32,4 @@ jobs:
 
     - name: Build Solution
       run: |
-        msbuild.exe SindenCompanion.sln /nologo /nr:false /p:platform="x64" /p:configuration="Release" /p:PublishUrl="../_build"
+        msbuild.exe SindenCompanion.sln /nologo /nr:false /p:platform="x64" /p:configuration="Release" /p:ReferencePath=$GITHUB_WORKSPACE p:PublishUrl="../_build"
