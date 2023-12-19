@@ -33,3 +33,8 @@ jobs:
     - name: Build Solution
       run: |
         msbuild.exe SindenCompanion.sln /nologo /nr:false /p:platform="x64" /p:configuration="Release" /p:PublishUrl="../_build"
+
+    - name: List outputs
+      run: |
+        Get-ChildItem -Path "*" -Recurse | 
+        Select @{Name="MB Size";Expression={ "{0:N1}" -f ($_.Length / 1MB) }}, Fullname, LastWriteTime;
