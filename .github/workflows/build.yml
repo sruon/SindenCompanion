@@ -10,6 +10,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+  
+    - name: Bump version and push tag
+      id: tag_version
+      uses: mathieudutour/github-tag-action@v6.1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1
 
@@ -24,9 +31,6 @@ jobs:
         Expand-Archive .\sinden.zip -DestinationPath .\sinden
         cp .\sinden\LightgunBeta2.05\Lightgun.exe
 
-    - name: Create Build Directory
-      run: mkdir _build
-
     - name: Restore Packages
       run: nuget restore SindenCompanion.sln
 
@@ -34,7 +38,10 @@ jobs:
       run: |
         msbuild.exe SindenCompanion.sln /nologo /nr:false /p:platform="x64" /p:configuration="Release" /p:PublishUrl="../_build"
 
-    - name: List outputs
-      run: |
-        Get-ChildItem -Path "*" -Recurse | 
-        Select @{Name="MB Size";Expression={ "{0:N1}" -f ($_.Length / 1MB) }}, Fullname, LastWriteTime;
+    - name: Create release
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "build/SindenCompanion.exe,build/SindenHook.dll,build/config.yaml"
+        tag: ${{ steps.tag_version.outputs.new_tag }}
+        name: Release ${{ steps.tag_version.outputs.new_tag }}
+        body: ${{ steps.tag_version.outputs.changelog }}
