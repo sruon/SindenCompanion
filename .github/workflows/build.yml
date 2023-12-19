@@ -3,7 +3,12 @@ name: SindenCompanion Build
 on: 
   push: 
     branches: master
-
+    paths:
+      - '**.cs'
+      - '**.sln'
+      - '**.yaml'
+      - '**.csproj'
+      - '.github/workflows/build.yml'
 jobs: 
   build: 
     runs-on: windows-2019
