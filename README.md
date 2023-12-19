@@ -2,8 +2,6 @@
 
 ## TODO
 - Detect Lightgun.exe crashed and restart it
-- Add menu item to show window
-- Add menu item to exit app
 - Add menu item to switch profile?
 - Add menu item to disable window monitoring?
 - Detect if injected DLL crashed and reinject it

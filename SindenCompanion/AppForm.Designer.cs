@@ -35,8 +35,10 @@
             this.NotificationIconMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.showMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bootMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuSeparator = new System.Windows.Forms.ToolStripSeparator();
+            this.menuSeparatorBottom = new System.Windows.Forms.ToolStripSeparator();
             this.exitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.configFileMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuSeparatorTop = new System.Windows.Forms.ToolStripSeparator();
             this.NotificationIconMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -64,11 +66,13 @@
             this.NotificationIconMenu.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.NotificationIconMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.showMenuItem,
+            this.menuSeparatorTop,
+            this.configFileMenuItem,
             this.bootMenuItem,
-            this.menuSeparator,
+            this.menuSeparatorBottom,
             this.exitMenuItem});
             this.NotificationIconMenu.Name = "NotificationIconMenu";
-            this.NotificationIconMenu.Size = new System.Drawing.Size(241, 139);
+            this.NotificationIconMenu.Size = new System.Drawing.Size(241, 177);
             // 
             // showMenuItem
             // 
@@ -83,10 +87,10 @@
             this.bootMenuItem.Size = new System.Drawing.Size(240, 32);
             this.bootMenuItem.Text = "Start at boot";
             // 
-            // menuSeparator
+            // menuSeparatorBottom
             // 
-            this.menuSeparator.Name = "menuSeparator";
-            this.menuSeparator.Size = new System.Drawing.Size(237, 6);
+            this.menuSeparatorBottom.Name = "menuSeparatorBottom";
+            this.menuSeparatorBottom.Size = new System.Drawing.Size(237, 6);
             // 
             // exitMenuItem
             // 
@@ -94,6 +98,18 @@
             this.exitMenuItem.Size = new System.Drawing.Size(240, 32);
             this.exitMenuItem.Text = "Exit";
             this.exitMenuItem.Click += new System.EventHandler(this.exitMenuItem_Click);
+            // 
+            // configFileMenuItem
+            // 
+            this.configFileMenuItem.Name = "configFileMenuItem";
+            this.configFileMenuItem.Size = new System.Drawing.Size(240, 32);
+            this.configFileMenuItem.Text = "Open config file";
+            this.configFileMenuItem.Click += new System.EventHandler(this.configFileMenuItem_Click);
+            // 
+            // menuSeparatorTop
+            // 
+            this.menuSeparatorTop.Name = "menuSeparatorTop";
+            this.menuSeparatorTop.Size = new System.Drawing.Size(237, 6);
             // 
             // AppForm
             // 
@@ -117,7 +133,9 @@
         private System.Windows.Forms.ContextMenuStrip NotificationIconMenu;
         private System.Windows.Forms.ToolStripMenuItem showMenuItem;
         private System.Windows.Forms.ToolStripMenuItem bootMenuItem;
-        private System.Windows.Forms.ToolStripSeparator menuSeparator;
+        private System.Windows.Forms.ToolStripSeparator menuSeparatorBottom;
         private System.Windows.Forms.ToolStripMenuItem exitMenuItem;
+        private System.Windows.Forms.ToolStripSeparator menuSeparatorTop;
+        private System.Windows.Forms.ToolStripMenuItem configFileMenuItem;
     }
 }

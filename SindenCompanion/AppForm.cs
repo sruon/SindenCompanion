@@ -1,23 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Forms.Integration;
-using System.Windows.Media;
-using Application = System.Windows.Application;
+using System.Diagnostics;
+using System.IO;
 
 namespace SindenCompanion
 {
     public partial class AppForm : Form
     {
-        private static readonly object _syncRoot = new object();
         public readonly System.Windows.Controls.RichTextBox WpfRichTextBox;
 
         private bool _userRequestedClose = false;
@@ -82,6 +74,11 @@ namespace SindenCompanion
         {
             _userRequestedClose = true;
             System.Windows.Forms.Application.Exit();
+        }
+
+        private void configFileMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start($"{Directory.GetCurrentDirectory()}\\config.yaml");
         }
     }
 }
