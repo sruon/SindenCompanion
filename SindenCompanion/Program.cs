@@ -200,14 +200,14 @@ namespace SindenCompanion
             SindenInjector injector = null;
             new Thread(() =>
             {
-                injector = new SindenInjector(conf.Global.Lightgun, logger);
+                injector = new SindenInjector(conf, logger);
                 injector.Inject();
                 while (true)
                 {
                     if (!injector.IsAlive())
                     {
                         logger.Error("Lightgun.exe died, will attempt to restart. This will fail if path is not set.");
-                        injector = new SindenInjector(conf.Global.Lightgun, logger);
+                        injector = new SindenInjector(conf, logger);
                         injector.Inject();
                     }
 

@@ -16,13 +16,13 @@ namespace HoLLy.ManagedInjector.Injectors
 
 		protected abstract string GetClrVersion();
 
-		public void Inject(InjectableProcess process, string dllPath, string typeName, string methodName)
+		public void Inject(InjectableProcess process, string dllPath, string typeName, string methodName, string args)
 		{
 			bool x86 = !process.Is64Bit;
 			var clrVersion = GetClrVersion();
 			var bindToRuntimeAddr = GetCorBindToRuntimeExAddress(process.Pid, process.FullHandle, x86);
 
-			var callStub = CreateCallStub(process.FullHandle, dllPath, typeName, methodName, null, bindToRuntimeAddr, x86, clrVersion);
+			var callStub = CreateCallStub(process.FullHandle, dllPath, typeName, methodName, args, bindToRuntimeAddr, x86, clrVersion);
 
 			var hThread = CodeInjectionUtils.RunRemoteCode(process.FullHandle, callStub, x86);
 			Console.WriteLine("Thread handle: " + hThread.ToInt32().ToString("X8"));

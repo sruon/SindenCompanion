@@ -148,15 +148,15 @@ namespace HoLLy.ManagedInjector
 			};
 		}
 
-		public void Inject(string dllPath, string typeName, string methodName)
+		public void Inject(string dllPath, string typeName, string methodName, string args)
 		{
 			IInjector injector = GetInjector();
 
-			Inject(injector, dllPath, typeName, methodName);
+			Inject(injector, dllPath, typeName, methodName, args);
 		}
 
-		public void Inject(IInjector injector, string dllPath, string typeName, string methodName) =>
-			injector.Inject(this, dllPath, typeName, methodName);
+		public void Inject(IInjector injector, string dllPath, string typeName, string methodName, string args) =>
+			injector.Inject(this, dllPath, typeName, methodName, args);
 
 		private void ReleaseUnmanagedResources()
 		{

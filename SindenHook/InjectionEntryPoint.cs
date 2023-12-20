@@ -16,8 +16,8 @@ namespace SindenHook
         private RecoilProfile _lastProfile;
 
         public List<SindenLightgun> Lightguns;
-        EntryPoint() {
-            _client = new ServerInterface(false, 5557, null, MessageHandler);
+        EntryPoint(InjectionArguments injectionArguments) {
+            _client = new ServerInterface(false, injectionArguments.CommunicationPort, null, MessageHandler);
             _logger = SindenCompanionShared.Logger.CreateRemoteLogger(_client);
             _client.SetLogger(_logger);
         }
@@ -145,9 +145,10 @@ namespace SindenHook
                 }
             }
         }
-        static int Run(string test)
+        static int Run(string args)
         {
-            EntryPoint app = new EntryPoint();
+            var injectionArguments = Newtonsoft.Json.JsonConvert.DeserializeObject<InjectionArguments>(args);
+            EntryPoint app = new EntryPoint(injectionArguments);
             app.Execute();
             return 0;
         }
