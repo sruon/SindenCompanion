@@ -40,6 +40,21 @@ game_profiles:
       profile: "Single"
       match:
         title: "SindenLightgun"
+    - name: "House of the Dead: Scarlet Dawn"
+      profile: "Single"
+      match:
+        exe: "Hodzero-Win64-Shipping.exe"
+    - name: "Dead Containment Demo"
+      profile: "Single"
+      match:
+        exe: "DeadContainment-Win64-Shipping.exe"
+      memscan:
+        code: DeadContainment-Win64-Shipping.exe+04AAF978,0x0,0x110,0x2F0,0x2E8
+        size: 1
+        match:
+          0x0: "Single" # Not sure
+          0x1: "Single" # Single fire
+          0x2: "Auto_Fast" # Auto fire
     - name: "Assault Cube"
       profile: "Single"
       match:

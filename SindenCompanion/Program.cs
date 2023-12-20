@@ -74,42 +74,54 @@ namespace SindenCompanion
                         return;
                     }
                     
-                    while (true)
+                    _logger.Debug("Starting thread to watch memory for changes.");
+                    new Thread(() =>
                     {
-                        int value = memlib.ReadByte(matchedGp.Memscan.Code);
-                        string profName;
-                        if (matchedGp.Memscan.Match.TryGetValue(value, out profName))
+                        while (true)
                         {
-                            matchedRp = _conf.RecoilProfiles.FirstOrDefault(p => p.Name == profName);
-                            if (matchedRp == null)
+                            int value = memlib.ReadByte(matchedGp.Memscan.Code);
+                            if (matchedGp.Memscan.Match.TryGetValue(value, out var profName))
                             {
-                                _logger.Error("Could not find any profile named {@Profile}. Check your configuration.", profName);
+
+                                matchedRp = _conf.RecoilProfiles.FirstOrDefault(p => p.Name == profName);
+                                if (matchedRp == null)
+                                {
+                                    _logger.Error(
+                                        "[{@Game}][MEM] {@Value} -> {@Profile} not found. Check your configuration.",
+                                        matchedGp.Name, value, profName);
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                _logger.Error("[{@Game}][MEM] {@Value} -> No profile found. Check your configuration.",
+                                    matchedGp.Name, value);
                                 return;
                             }
-                        }
-                        else
-                        {
-                            _logger.Error("Could not match value {@Value} to a profile. Check your configuration.", value);
-                            return;
-                        }
-                        if (matchedRp != _currentProfile)
-                        {
-                            _logger.Information($"Matched profile {matchedGp.Name}, requesting switch to {matchedGp.Profile}");
-                            _server.SendMessage(MessageBuilder.Build("profile", matchedRp).AsMessage());
-                            if (_conf.Global.RecoilOnSwitch)
+
+                            if (matchedRp != _currentProfile)
                             {
-                                _server.SendMessage(MessageBuilder.Build("recoil", null).AsMessage());
+                                _logger.Information("[{@Game}][MEM] {@Value} -> {@Profile}", matchedGp.Name, value,
+                                    matchedRp.Name);
+                                _server.SendMessage(MessageBuilder.Build("profile", matchedRp).AsMessage());
+                                if (_conf.Global.RecoilOnSwitch)
+                                {
+                                    _server.SendMessage(MessageBuilder.Build("recoil", null).AsMessage());
+                                }
+
+                                _currentProfile = matchedRp;
                             }
-                            _currentProfile = matchedRp;
+
+                            ForegroundProcess newFp = new ForegroundProcess();
+                            if (newFp.ProcessId != fp.ProcessId)
+                            {
+                                _logger.Information("Detected window swap during memory scan, terminating thread.");
+                                return;
+                            }
+
+                            Thread.Sleep(500);
                         }
-                        ForegroundProcess newFp = new ForegroundProcess();
-                        if (newFp.ProcessId != fp.ProcessId)
-                        {
-                            _logger.Information("Detected window swap during memory scan, breaking loop.");
-                            return;
-                        }
-                        Thread.Sleep(500);
-                    }
+                    }).Start();
                 }
                 else // Single profile swap
                 {
