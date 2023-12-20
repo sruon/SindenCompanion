@@ -46,6 +46,7 @@ namespace SindenCompanion
             {
                 return false;
             }
+
             return true;
         }
 
@@ -83,11 +84,9 @@ namespace SindenCompanion
                 }
                 else
                 {
-                    if (rk.GetValue(AppTitle).ToString().ToLower() == AppPath.ToLower())
-                    {
-                        rk.DeleteValue(AppTitle);
-                    }
+                    if (rk.GetValue(AppTitle).ToString().ToLower() == AppPath.ToLower()) rk.DeleteValue(AppTitle);
                 }
+
                 return true;
             }
             catch (Exception)
@@ -103,16 +102,14 @@ namespace SindenCompanion
                 }
                 else
                 {
-                    if (rk.GetValue(AppTitle).ToString().ToLower() == AppPath.ToLower())
-                    {
-                        rk.DeleteValue(AppTitle);
-                    }
+                    if (rk.GetValue(AppTitle).ToString().ToLower() == AppPath.ToLower()) rk.DeleteValue(AppTitle);
                 }
             }
             catch (Exception)
             {
                 return false;
             }
+
             return true;
         }
 
@@ -141,17 +138,11 @@ namespace SindenCompanion
                 rk = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
                 value = rk.GetValue(AppTitle).ToString();
                 if (value == null)
-                {
                     return false;
-                }
                 else if (!value.ToLower().Equals(AppPath.ToLower()))
-                {
                     return false;
-                }
                 else
-                {
                     return true;
-                }
             }
             catch (Exception)
             {
@@ -162,17 +153,11 @@ namespace SindenCompanion
                 rk = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
                 value = rk.GetValue(AppTitle)?.ToString();
                 if (value == null)
-                {
                     return false;
-                }
                 else if (!value.ToLower().Equals(AppPath.ToLower()))
-                {
                     return false;
-                }
                 else
-                {
                     return true;
-                }
             }
             catch (Exception)
             {

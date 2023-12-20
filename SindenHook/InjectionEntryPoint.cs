@@ -1,24 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Windows.Forms;
 using System.Threading;
+using System.Windows.Forms;
 using Lightgun;
-using SindenCompanionShared;
+using Newtonsoft.Json;
 using Serilog;
+using SindenCompanionShared;
 
 namespace SindenHook
 {
     public class EntryPoint
     {
-        private ILogger _logger;
-        private ServerInterface _client;
+        private readonly ServerInterface _client;
+        private readonly ILogger _logger;
         private RecoilProfile _lastProfile;
 
         public List<SindenLightgun> Lightguns;
-        EntryPoint(InjectionArguments injectionArguments) {
+
+        private EntryPoint(InjectionArguments injectionArguments)
+        {
             _client = new ServerInterface(false, injectionArguments.CommunicationPort, null, MessageHandler);
-            _logger = SindenCompanionShared.Logger.CreateRemoteLogger(_client);
+            _logger = Logger.CreateRemoteLogger(_client);
             _client.SetLogger(_logger);
         }
 
@@ -34,22 +37,24 @@ namespace SindenHook
                 }
                 catch (Exception ex)
                 {
-                    Enveloppe ev = MessageBuilder.Build("exception", ex);
+                    var ev = MessageBuilder.Build("exception", ex);
                     _client.SendMessage(ev.AsMessage());
                 }
             }
+
             _logger.Information("Found main app form");
 
 
-            bool foundGuns = false;
+            var foundGuns = false;
 
-            while (!foundGuns) {
+            while (!foundGuns)
+            {
                 Thread.Sleep(200);
 
                 try
                 {
-                    FieldInfo type =
-                        typeof(Lightgun.Form1).GetField("listLightguns", BindingFlags.NonPublic | BindingFlags.Instance);
+                    var type =
+                        typeof(Form1).GetField("listLightguns", BindingFlags.NonPublic | BindingFlags.Instance);
                     if (type != null)
                     {
                         Lightguns = (List<SindenLightgun>)type.GetValue(f1);
@@ -59,29 +64,27 @@ namespace SindenHook
                     {
                         continue;
                     }
+
                     foundGuns = true;
                 }
                 catch (Exception ex)
                 {
-                    Enveloppe ev = MessageBuilder.Build("exception", ex);
+                    var ev = MessageBuilder.Build("exception", ex);
                     _client.SendMessage(ev.AsMessage());
                 }
             }
 
-            while (true)
-            {
-                Thread.Sleep(5000);
-            }
+            while (true) Thread.Sleep(5000);
         }
+
         public void MessageHandler(List<string> messages)
         {
-            foreach (string msg in messages)
-            {
+            foreach (var msg in messages)
                 if (!string.IsNullOrEmpty(msg))
                 {
-                    Enveloppe e = MessageBuilder.FromMessage(msg);
-                    Enveloppe ev;
-                    switch (e.type)
+                    var e = MessageBuilder.FromMessage(msg);
+                    Envelope ev;
+                    switch (e.Type)
                     {
                         case "ping":
                             ev = MessageBuilder.Build("pong", null);
@@ -92,63 +95,64 @@ namespace SindenHook
                             _client.SendMessage(ev.AsMessage());
                             break;
                         case "recoil":
-                            if (Lightguns.Count == 0 || _lastProfile == null)
+                            if (Lightguns == null || Lightguns.Count == 0 || _lastProfile == null)
                             {
                                 ev = MessageBuilder.Build("recoilack", false);
+                                _client.SendMessage(ev.AsMessage());
+                                break;
                             }
-                            else
-                            {
-                                foreach (SindenLightgun lightgun in Lightguns)
+
+                            foreach (var lightgun in Lightguns)
+                                if (!_lastProfile.Automatic)
                                 {
-                                    if (!_lastProfile.Automatic)
-                                    {
-                                        lightgun.TestSingleShotRecoil();
-                                    }
-                                    else
-                                    {
-                                        lightgun.TestAutomaticRecoilStart();
-                                        Thread.Sleep(200);
-                                        lightgun.TestAutomaticRecoilStop();
-                                    }
+                                    lightgun.TestSingleShotRecoil();
                                 }
-                                ev = MessageBuilder.Build("recoilack", true);
-                            }
+                                else
+                                {
+                                    lightgun.TestAutomaticRecoilStart();
+                                    Thread.Sleep(200);
+                                    lightgun.TestAutomaticRecoilStop();
+                                }
+
+                            ev = MessageBuilder.Build("recoilack", true);
+
+
                             _client.SendMessage(ev.AsMessage());
                             break;
                         case "profile":
-                            RecoilProfile rp = RecoilProfile.FromString(e.payload.ToString());
-                            if (_lastProfile != null && _lastProfile.Name == rp.Name)
-                            {
-                                break;
-                            }
-                            if (Lightguns.Count == 0)
+                            if (Lightguns == null || Lightguns.Count == 0)
                             {
                                 ev = MessageBuilder.Build("profileack", false);
                                 _client.SendMessage(ev.AsMessage());
+                                break;
                             }
-                            else
+
+                            var rp = RecoilProfile.FromString(e.Payload.ToString());
+                            if (_lastProfile != null && _lastProfile.Name == rp.Name) break;
+
+                            var success = false;
+                            foreach (var lightgun in Lightguns)
                             {
-                                bool success = false;
-                                foreach (SindenLightgun lightgun in Lightguns)
-                                {
-                                    success = lightgun.UpdateRecoilFromProfile(rp);
-                                    if (success) continue;
-                                    _logger.Error($"Failed to apply profile to {lightgun.lightgunOwner.ToString()}");
-                                    break;
-                                }
-                                if (success) _lastProfile = rp;
-                                ev = MessageBuilder.Build("profileack", success);
+                                success = lightgun.UpdateRecoilFromProfile(rp);
+                                if (success) continue;
+                                _logger.Error($"Failed to apply profile to {lightgun.lightgunOwner.ToString()}");
+                                break;
                             }
+
+                            if (success) _lastProfile = rp;
+                            ev = MessageBuilder.Build("profileack", success);
+
                             _client.SendMessage(ev.AsMessage());
                             break;
                     }
                 }
-            }
         }
-        static int Run(string args)
+
+
+        private static int Run(string args)
         {
-            var injectionArguments = Newtonsoft.Json.JsonConvert.DeserializeObject<InjectionArguments>(args);
-            EntryPoint app = new EntryPoint(injectionArguments);
+            var injectionArguments = JsonConvert.DeserializeObject<InjectionArguments>(args);
+            var app = new EntryPoint(injectionArguments);
             app.Execute();
             return 0;
         }

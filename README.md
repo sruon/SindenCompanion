@@ -1,8 +1,7 @@
 # Sinden Companion
 
 ## TODO
-- Add menu item to disable window monitoring?
-- Remove unused references
+- Support varying bytes for injection
 
 ## Getting started
 - Download the most recent release from the release page

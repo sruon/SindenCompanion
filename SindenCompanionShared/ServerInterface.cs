@@ -1,9 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using NetMQ;
 using NetMQ.Sockets;
-using System.Collections.Generic;
 using Serilog;
-
 
 namespace SindenCompanionShared
 {
@@ -14,78 +13,72 @@ namespace SindenCompanionShared
     /// </summary>
     public class ServerInterface : IDisposable
     {
-        PushSocket pusher;
-        PullSocket puller;
-        NetMQPoller poller;
-        RecvCallback _callback;
+        private readonly RecvCallback _callback;
         private ILogger _logger;
-        public ServerInterface(bool isServer, int IpcPort, ILogger logger, RecvCallback callback) {
+        private readonly NetMQPoller _poller;
+        private readonly PullSocket _puller;
+        private readonly PushSocket _pusher;
+
+        public ServerInterface(bool isServer, int ipcPort, ILogger logger, RecvCallback callback)
+        {
             _logger = logger;
             if (isServer)
             {
                 if (_logger != null)
-                {
-                    _logger.Information("Starting communication interface for server (Push: {@Pusher}) (Pull: {@Puller})", IpcPort, IpcPort + 1);
-                }
-                pusher = new PushSocket($"@tcp://*:{IpcPort}");
-                puller = new PullSocket($"@tcp://localhost:{IpcPort + 1}");
-            } else
+                    _logger.Information(
+                        "Starting communication interface for server (Push: {@Pusher}) (Pull: {@Puller})", ipcPort,
+                        ipcPort + 1);
+                _pusher = new PushSocket($"@tcp://*:{ipcPort}");
+                _puller = new PullSocket($"@tcp://localhost:{ipcPort + 1}");
+            }
+            else
             {
                 if (_logger != null)
-                {
-                    _logger.Information("Starting communication interface for client {@Pusher} {@Puller}", IpcPort + 1, IpcPort);
-                }
-                pusher = new PushSocket($">tcp://localhost:{IpcPort + 1}");
-                puller = new PullSocket($">tcp://localhost:{IpcPort}");
+                    _logger.Information("Starting communication interface for client {@Pusher} {@Puller}", ipcPort + 1,
+                        ipcPort);
+                _pusher = new PushSocket($">tcp://localhost:{ipcPort + 1}");
+                _puller = new PullSocket($">tcp://localhost:{ipcPort}");
             }
-            poller = new NetMQPoller { puller };
+
+            _poller = new NetMQPoller { _puller };
             _callback = callback;
-            puller.ReceiveReady += this.ReceiveMessages;
-            poller.RunAsync();
+            _puller.ReceiveReady += ReceiveMessages;
+            _poller.RunAsync();
         }
 
         public void Dispose()
         {
-            poller.StopAsync();
+            _poller.StopAsync();
         }
-        public void SetLogger( ILogger logger )
+
+        public void SetLogger(ILogger logger)
         {
             _logger = logger;
         }
+
         public void SendMessage(string msg)
         {
-            if (_logger != null)
-            {
-                _logger.Debug("Sending message {@Message}", msg);
-            }
-            pusher.SendFrame(msg);
+            if (_logger != null) _logger.Debug("Sending message {@Message}", msg);
+            _pusher.SendFrame(msg);
         }
 
         public void ReceiveMessages(object sender, NetMQSocketEventArgs e)
         {
-            List<string> ret = new List<string>();
-            string msg = string.Empty;
-            bool more = true;
+            var ret = new List<string>();
+            var msg = string.Empty;
+            var more = true;
             while (more)
             {
-                bool received = e.Socket.TryReceiveFrameString(out msg, out more);
+                var received = e.Socket.TryReceiveFrameString(out msg, out more);
                 if (received)
                 {
-                    if (_logger != null)
-                    {
-                        _logger.Debug("Received message {@Message}", msg);
-                    }
+                    if (_logger != null) _logger.Debug("Received message {@Message}", msg);
                     ret.Add(msg);
                 }
             }
-            if (_logger != null && ret.Count > 0)
-            {
-                _logger.Debug("Received {@Count} messages", ret.Count);
-            }
-            if (_callback != null)
-            {
-                _callback(ret);
-            }
+
+            if (_logger != null && ret.Count > 0) _logger.Debug("Received {@Count} messages", ret.Count);
+            if (_callback != null) _callback(ret);
         }
     }
 }

@@ -1,75 +1,77 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using SindenCompanionShared;
-using YamlDotNet.Serialization.NamingConventions;
 using YamlDotNet.Serialization;
-using System;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace SindenCompanion
 
-{   public class Config
+{
+    public class Config
     {
-        private static Config _instance = null;
-        private static FileSystemWatcher _fw = null;
+        private static Config _instance;
+        private static FileSystemWatcher _fw;
+
+        public List<RecoilProfile> RecoilProfiles { get; set; } = new List<RecoilProfile>();
+        public List<GameProfile> GameProfiles { get; set; } = new List<GameProfile>();
+
+        public Global Global { get; set; }
+
         public static Config GetInstance()
         {
-            if (_instance != null) {
-                return _instance;
-            }
-            if (_fw == null) { 
+            if (_instance != null) return _instance;
+            if (_fw == null)
+            {
                 _fw = new FileSystemWatcher();
-                _fw.Path = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                _fw.Path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 _fw.Filter = "config.yaml";
-                _fw.Changed += new FileSystemEventHandler((e, a) => {
+                _fw.Changed += new FileSystemEventHandler((e, a) =>
+                {
                     Console.WriteLine("Detected change to config file.");
-                    _instance = null; 
+                    _instance = null;
                 });
                 _fw.EnableRaisingEvents = true;
             }
 
             Console.WriteLine("Loading configuration.");
-            using (StreamReader streamReader = new StreamReader(".\\config.yaml", Encoding.UTF8))
+            using (var streamReader = new StreamReader(".\\config.yaml", Encoding.UTF8))
             {
                 try
                 {
                     var deserializer = new DeserializerBuilder()
-                                            .WithNamingConvention(UnderscoredNamingConvention.Instance)
-                                            .Build();
+                        .WithNamingConvention(UnderscoredNamingConvention.Instance)
+                        .Build();
                     _instance = deserializer.Deserialize<Config>(streamReader.ReadToEnd());
-                } catch (Exception ex)
+                }
+                catch (Exception ex)
                 {
                     Console.WriteLine($"Failed to instantiate configuration: {ex}");
                     throw ex;
                 }
             }
+
             return _instance;
         }
+    }
 
-        public List<RecoilProfile> RecoilProfiles { get; set; }
-        public List<GameProfile> GameProfiles { get; set; }
-
-        public Global Global { get; set; }
-        public Config()
-        {
-            RecoilProfiles = new List<RecoilProfile>();
-            GameProfiles = new List<GameProfile>();
-        }
-    } 
 
     public class Global
     {
-        public bool RecoilOnSwitch { get; set; }
-        public int IpcPort { get; set; }
-        public string Lightgun {  get; set; }
-
-        public bool Debug { get; set; }
-
         public Global()
         {
             IpcPort = 5557;
         }
+
+        public bool RecoilOnSwitch { get; set; }
+        public int IpcPort { get; set; }
+        public string Lightgun { get; set; }
+
+        public bool Debug { get; set; }
     }
+
     public class GameProfile
     {
         public string Name { get; set; }
@@ -80,27 +82,18 @@ namespace SindenCompanion
 
         public MemScan Memscan { get; set; }
 
-        public bool Matches (ForegroundProcess fp)
+        public bool Matches(ForegroundProcess fp)
         {
             // If both exe and title are set, AND them
             if (Match.Exe != null && Match.Title != null)
             {
-                if ($"{fp.ProcessName}.exe" == Match.Exe && Match.Title == fp.WindowTitle)
-                {
-                    return true;
-                }
+                if ($"{fp.ProcessName}.exe" == Match.Exe && Match.Title == fp.WindowTitle) return true;
                 return false;
             }
-            
-            if ($"{fp.ProcessName}.exe" == Match.Exe)
-            {
-                return true;
-            }
 
-            if (Match.Title == fp.WindowTitle)
-            {
-                return true;
-            }
+            if ($"{fp.ProcessName}.exe" == Match.Exe) return true;
+
+            if (Match.Title == fp.WindowTitle) return true;
 
             return false;
         }

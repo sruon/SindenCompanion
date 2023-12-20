@@ -1,40 +1,35 @@
-﻿using Serilog;
+﻿using System;
+using Serilog;
+using Serilog.Configuration;
 using Serilog.Core;
 using Serilog.Events;
-using System;
-using Serilog.Configuration;
 
 namespace SindenCompanionShared
 {
-
-    public class Logger 
+    public class Logger
     {
         public static ILogger CreateRemoteLogger(ServerInterface s)
         {
-            LoggerConfiguration config = new LoggerConfiguration().WriteTo.RemoteSink(s).MinimumLevel.Information();
+            var config = new LoggerConfiguration().WriteTo.RemoteSink(s).MinimumLevel.Information();
             Log.Logger = config.CreateLogger();
 
             return Log.Logger;
         }
+
         public static ILogger CreateLogger(bool toFile, bool debug)
         {
-            LoggerConfiguration config = new LoggerConfiguration().WriteTo.Console();
+            var config = new LoggerConfiguration().WriteTo.Console();
 
-            if (toFile)
-            {
-                config = config.WriteTo.File("sc.log");
-            }
+            if (toFile) config = config.WriteTo.File("sc.log");
 
-            if (debug)
-            {
-                config = config.MinimumLevel.Debug();
-            }
+            if (debug) config = config.MinimumLevel.Debug();
 
             Log.Logger = config.CreateLogger();
 
             return Log.Logger;
         }
     }
+
     public class RemoteSink : ILogEventSink
     {
         private readonly IFormatProvider _formatProvider;
@@ -49,7 +44,7 @@ namespace SindenCompanionShared
         public void Emit(LogEvent logEvent)
         {
             var message = logEvent.RenderMessage(_formatProvider);
-            Enveloppe ev = MessageBuilder.Build("log", message);
+            var ev = MessageBuilder.Build("log", message);
             _server.SendMessage(ev.AsMessage());
         }
     }
@@ -57,8 +52,8 @@ namespace SindenCompanionShared
     public static class RemoteSinkExtensions
     {
         public static LoggerConfiguration RemoteSink(
-                  this LoggerSinkConfiguration loggerConfiguration,
-                  ServerInterface s, IFormatProvider formatProvider = null)
+            this LoggerSinkConfiguration loggerConfiguration,
+            ServerInterface s, IFormatProvider formatProvider = null)
         {
             return loggerConfiguration.Sink(new RemoteSink(formatProvider, s));
         }

@@ -1,38 +1,34 @@
-﻿using Newtonsoft.Json;
-using System;
-
+﻿using System;
+using Newtonsoft.Json;
 
 namespace SindenCompanionShared
 {
     public class MessageBuilder
     {
-        public MessageBuilder() {         
-        }
-
-        public static Enveloppe Build(string type, object payload)
+        public static Envelope Build(string type, object payload)
         {
-            Enveloppe e = new Enveloppe(type, payload);
+            var e = new Envelope(type, payload);
             return e;
         }
 
-        public static Enveloppe FromMessage(string message)
+        public static Envelope FromMessage(string message)
         {
-            if (message == null)
-            {
-                return null;
-            }
-            return JsonConvert.DeserializeObject<Enveloppe>(message);
+            if (message == null) return null;
+            return JsonConvert.DeserializeObject<Envelope>(message);
         }
     }
-    public class Enveloppe
+
+    public class Envelope
     {
-        public DateTime tstamp;
-        public object payload;
-        public string type;
-        public Enveloppe(string _type, object _payload) {
-            tstamp = DateTime.Now;
-            payload = _payload;
-            type = _type;
+        private readonly DateTime _tstamp;
+        public readonly object Payload;
+        public readonly string Type;
+
+        public Envelope(string type, object payload)
+        {
+            _tstamp = DateTime.Now;
+            Payload = payload;
+            Type = type;
         }
 
         public string AsMessage()

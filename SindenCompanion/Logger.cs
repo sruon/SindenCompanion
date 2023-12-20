@@ -1,22 +1,15 @@
-﻿using Serilog;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Windows.Controls;
+using Serilog;
 
 namespace SindenCompanionShared
 {
     public partial class Logger
     {
-        public static ILogger CreateDesktopLogger(bool debug, System.Windows.Controls.RichTextBox rtb)
+        public static ILogger CreateDesktopLogger(bool debug, RichTextBox rtb)
         {
-            LoggerConfiguration config = new LoggerConfiguration().WriteTo.RichTextBox(rtb);
+            var config = new LoggerConfiguration().WriteTo.RichTextBox(rtb);
 
-            if (debug)
-            {
-                config = config.MinimumLevel.Debug();
-            }
+            if (debug) config = config.MinimumLevel.Debug();
 
             Log.Logger = config.CreateLogger();
 
