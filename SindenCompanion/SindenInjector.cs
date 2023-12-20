@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using HoLLy.ManagedInjector;
+using Memory;
+using Microsoft.Diagnostics.Runtime;
 using Serilog;
 
 
@@ -49,6 +52,10 @@ namespace SindenCompanion
             }
         }
 
+        public bool IsAlive()
+        {
+            return process != null && !process.HasExited;
+        }
         public void Dispose() {
             if (process != null && _started)
             {
@@ -65,6 +72,19 @@ namespace SindenCompanion
 
         public void Inject()
         {
+            var dt = DataTarget.AttachToProcess(process.Id, false);
+            var dllAlreadyLoaded = dt
+                .ClrVersions
+                .Select(dtClrVersion => dtClrVersion.CreateRuntime())
+                .SelectMany(runtime => runtime.AppDomains.SelectMany(runtimeAppDomain => runtimeAppDomain.Modules))
+                .Select(clrModule => clrModule.AssemblyName)
+                .Distinct()
+                .ToList().Any(x => x == libraryPath);
+            if (dllAlreadyLoaded)
+            {
+               _logger.Error("Library already loaded in process {@PID}, will not reinject. If this causes issues, restart Lightgun.exe", process.Id);
+                return;
+            }
             _logger.Information("Injecting library ({@Library}) in process {@PID}", libraryPath, process.Id);
             var injector = new InjectableProcess((uint)process.Id);
             injector.Inject(libraryPath, "SindenHook.EntryPoint", "Run");

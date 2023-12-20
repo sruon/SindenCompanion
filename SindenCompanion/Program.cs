@@ -197,15 +197,30 @@ namespace SindenCompanion
             ILogger logger = SindenCompanionShared.Logger.CreateDesktopLogger(conf.Global.Debug, mainForm.WpfRichTextBox);
             App app = new App(logger);
             mainForm.SetCallback(app.ChangeProfile);
+            SindenInjector injector = null;
+            new Thread(() =>
+            {
+                injector = new SindenInjector(conf.Global.Lightgun, logger);
+                injector.Inject();
+                while (true)
+                {
+                    if (!injector.IsAlive())
+                    {
+                        logger.Error("Lightgun.exe died, will attempt to restart. This will fail if path is not set.");
+                        injector = new SindenInjector(conf.Global.Lightgun, logger);
+                        injector.Inject();
+                    }
 
-            SindenInjector injector = new SindenInjector(conf.Global.Lightgun, logger);
-            injector.Inject();
+                    Thread.Sleep(1000);
+                }
+            }).Start();
+            
 
             _dele = new WinEventDelegate(app.WindowEventHandler);
             SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, _dele, 0, 0, WINEVENT_OUTOFCONTEXT);
             Application.ApplicationExit += (s, a) =>
             {
-                injector.Dispose();
+                if (injector != null) injector.Dispose();
                 app.Dispose();
             };
             Application.EnableVisualStyles();
