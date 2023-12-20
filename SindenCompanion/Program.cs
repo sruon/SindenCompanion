@@ -79,6 +79,13 @@ namespace SindenCompanion
                     {
                         while (true)
                         {
+                            ForegroundProcess newFp = new ForegroundProcess();
+                            if (newFp.ProcessId != fp.ProcessId)
+                            {
+                                _logger.Information("Detected window swap during memory scan, terminating thread.");
+                                return;
+                            }
+
                             int value = memlib.ReadByte(matchedGp.Memscan.Code);
                             if (matchedGp.Memscan.Match.TryGetValue(value, out var profName))
                             {
@@ -89,14 +96,14 @@ namespace SindenCompanion
                                     _logger.Error(
                                         "[{@Game}][MEM] {@Value} -> {@Profile} not found. Check your configuration.",
                                         matchedGp.Name, value, profName);
-                                    return;
+                                    continue;
                                 }
                             }
                             else
                             {
                                 _logger.Error("[{@Game}][MEM] {@Value} -> No profile found. Check your configuration.",
                                     matchedGp.Name, value);
-                                return;
+                                continue;
                             }
 
                             if (matchedRp != _currentProfile)
@@ -112,14 +119,8 @@ namespace SindenCompanion
                                 _currentProfile = matchedRp;
                             }
 
-                            ForegroundProcess newFp = new ForegroundProcess();
-                            if (newFp.ProcessId != fp.ProcessId)
-                            {
-                                _logger.Information("Detected window swap during memory scan, terminating thread.");
-                                return;
-                            }
 
-                            Thread.Sleep(500);
+                            Thread.Sleep(100);
                         }
                     }).Start();
                 }
