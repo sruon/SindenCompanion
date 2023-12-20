@@ -28,10 +28,6 @@ recoil_profiles:
       offscreen: false
       strength: 3
 game_profiles:
-    - name: "VS"
-      profile: "Auto_Fast"
-      match:
-        exe: "devenv.exe"
     - name: "Notepad"
       profile: "Auto_Strong"
       match:

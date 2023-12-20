@@ -2,7 +2,6 @@
 
 ## TODO
 - Detect Lightgun.exe crashed and restart it
-- Add menu item to switch profile?
 - Add menu item to disable window monitoring?
 - Detect if injected DLL crashed and reinject it
 - Remove unused references

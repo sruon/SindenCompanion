@@ -20,7 +20,7 @@ namespace SindenHook
             {
                 if (comPortV == null) return false;
                 comPortV.Write(payload, 0, 7);
-                Thread.Sleep(50);
+                Thread.Sleep(100);
             }
             blockComPort.SetValue(l, false);
             return true;

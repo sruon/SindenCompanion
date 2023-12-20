@@ -34,6 +34,17 @@ namespace SindenCompanion
                 memlib.CloseProcess();
             }
         }
+
+        public void ChangeProfile(RecoilProfile rp)
+        {
+            _server.SendMessage(MessageBuilder.Build("profile", rp).AsMessage());
+            if (_conf.Global.RecoilOnSwitch)
+            {
+                _server.SendMessage(MessageBuilder.Build("recoil", null).AsMessage());
+            }
+            _currentProfile = rp;
+
+        }
         private Mem GetMemoryReader(uint processId)
         {
             Mem memlib;
@@ -110,13 +121,7 @@ namespace SindenCompanion
                             {
                                 _logger.Information("[{@Game}][MEM] {@Value} -> {@Profile}", matchedGp.Name, value,
                                     matchedRp.Name);
-                                _server.SendMessage(MessageBuilder.Build("profile", matchedRp).AsMessage());
-                                if (_conf.Global.RecoilOnSwitch)
-                                {
-                                    _server.SendMessage(MessageBuilder.Build("recoil", null).AsMessage());
-                                }
-
-                                _currentProfile = matchedRp;
+                                ChangeProfile(matchedRp);
                             }
 
 
@@ -134,13 +139,8 @@ namespace SindenCompanion
                     }
                     if (matchedRp != _currentProfile)
                     {
-                        _logger.Information($"Matched profile {matchedGp.Name}, requesting switch to {matchedGp.Profile}");
-                        _server.SendMessage(MessageBuilder.Build("profile", matchedRp).AsMessage());
-                        if (_conf.Global.RecoilOnSwitch)
-                        {
-                            _server.SendMessage(MessageBuilder.Build("recoil", null).AsMessage());
-                        }
-                        _currentProfile = matchedRp;
+                        _logger.Information("[{@Game}] {@Profile}", matchedGp.Name, matchedRp.Name);
+                        ChangeProfile(matchedRp);
                     }
                 }
             }
@@ -179,7 +179,7 @@ namespace SindenCompanion
     }
     internal class Program
     {
-        static WinEventDelegate dele = null;
+        static WinEventDelegate _dele = null;
 
         delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
 
@@ -193,20 +193,21 @@ namespace SindenCompanion
         static void Main(string[] args)
         {
             Config conf = Config.GetInstance();
-            AppForm mainForm = new AppForm();
+            AppForm mainForm = new AppForm(conf);
             ILogger logger = SindenCompanionShared.Logger.CreateDesktopLogger(conf.Global.Debug, mainForm.WpfRichTextBox);
             App app = new App(logger);
+            mainForm.SetCallback(app.ChangeProfile);
 
             SindenInjector injector = new SindenInjector(conf.Global.Lightgun, logger);
             injector.Inject();
 
-            dele = new WinEventDelegate(app.WindowEventHandler);
-            IntPtr m_hhook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, dele, 0, 0, WINEVENT_OUTOFCONTEXT);
-            Application.ApplicationExit += new EventHandler((s, a) =>
+            _dele = new WinEventDelegate(app.WindowEventHandler);
+            SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, _dele, 0, 0, WINEVENT_OUTOFCONTEXT);
+            Application.ApplicationExit += (s, a) =>
             {
                 injector.Dispose();
                 app.Dispose();
-            });
+            };
             Application.EnableVisualStyles();
             Application.Run(mainForm);
         }

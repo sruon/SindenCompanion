@@ -31,12 +31,12 @@ namespace SindenCompanionShared
         {
             List<byte[]> ret = new List<byte[]>() {
                 new byte[] { 170, 162, PulseLength, DelayAfterFirstPulse, PulseLength, DelayBetweenPulses, 187 },
-                new byte[] {170, 161, 1, 0, 0, 0, 187},
-                new byte[] {170, 167, Strength, 0, 0, 0, 187},
+                new byte[] { 170, 161, 1, 0, 0, 0, 187},
+                new byte[] { 170, 167, Strength, 0, 0, 0, 187},
                 new byte[] { 170, 163, Convert.ToByte(Automatic), 0, 0, 0, 187 },
-                new byte[] {170, 164, 1, Convert.ToByte(Offscreen), Convert.ToByte(PumpOn), Convert.ToByte(PumpOff), 187 },
-                new byte[] {170, 165, Convert.ToByte(RecoilFrontLeft), Convert.ToByte(RecoilBackLeft), Convert.ToByte(RecoilFrontRight), Convert.ToByte(RecoilBackRight), 187},
-                new byte[] {170, 171, 4, 4, 4, 0, 187},
+                new byte[] { 170, 164, 1, Convert.ToByte(Offscreen), Convert.ToByte(PumpOn), Convert.ToByte(PumpOff), 187 },
+                new byte[] { 170, 165, Convert.ToByte(RecoilFrontLeft), Convert.ToByte(RecoilBackLeft), Convert.ToByte(RecoilFrontRight), Convert.ToByte(RecoilBackRight), 187},
+                new byte[] { 170, 171, 4, 4, 4, 0, 187},
                 //new byte[] { 170, 172, Strength, 0, 0, 0, 187} not sure what this does
             };
 

@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using System.Windows.Forms.Integration;
 using System.Diagnostics;
 using System.IO;
+using SindenCompanionShared;
 
 namespace SindenCompanion
 {
@@ -13,8 +14,13 @@ namespace SindenCompanion
         public readonly System.Windows.Controls.RichTextBox WpfRichTextBox;
 
         private bool _userRequestedClose = false;
-        public AppForm()
+
+        private readonly Config _conf;
+
+        private Action<RecoilProfile> _callback;
+        public AppForm(Config conf)
         {
+            _conf = conf;
             InitializeComponent();
             var richTextBoxHost = new ElementHost
             {
@@ -39,6 +45,11 @@ namespace SindenCompanion
 
             richTextBoxHost.Child = wpfRichTextBox;
             WpfRichTextBox = wpfRichTextBox;
+        }
+
+        public void SetCallback(Action<RecoilProfile> callback)
+        {
+            _callback = callback;
         }
 
         private void AppForm_Load(object sender, EventArgs e)
@@ -102,6 +113,16 @@ namespace SindenCompanion
         private void NotificationIconMenu_Opened(object sender, EventArgs e)
         {
             bootMenuItem.Checked = Startup.IsInStartup();
+            changeProfileMenuItem.DropDownItems.Clear();
+            foreach (var profile in _conf.RecoilProfiles)
+            {
+                var item = new ToolStripMenuItem(profile.Name);
+                item.Click += (s, a) =>
+                {
+                    _callback(profile);
+                };
+                changeProfileMenuItem.DropDownItems.Add(item);
+            }   
         }
 
         private void AppForm_Resize(object sender, EventArgs e)
@@ -112,5 +133,6 @@ namespace SindenCompanion
                 NotificationIcon.Visible = true;
             }
         }
+
     }
 }

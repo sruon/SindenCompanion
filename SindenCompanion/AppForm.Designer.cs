@@ -34,11 +34,12 @@
             this.NotificationIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.NotificationIconMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.showMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuSeparatorTop = new System.Windows.Forms.ToolStripSeparator();
+            this.configFileMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bootMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuSeparatorBottom = new System.Windows.Forms.ToolStripSeparator();
             this.exitMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.configFileMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuSeparatorTop = new System.Windows.Forms.ToolStripSeparator();
+            this.changeProfileMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.NotificationIconMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -66,52 +67,59 @@
             this.NotificationIconMenu.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.NotificationIconMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.showMenuItem,
+            this.changeProfileMenuItem,
             this.menuSeparatorTop,
             this.configFileMenuItem,
             this.bootMenuItem,
             this.menuSeparatorBottom,
             this.exitMenuItem});
             this.NotificationIconMenu.Name = "NotificationIconMenu";
-            this.NotificationIconMenu.Size = new System.Drawing.Size(212, 144);
+            this.NotificationIconMenu.Size = new System.Drawing.Size(248, 209);
             this.NotificationIconMenu.Opened += new System.EventHandler(this.NotificationIconMenu_Opened);
             // 
             // showMenuItem
             // 
             this.showMenuItem.Name = "showMenuItem";
-            this.showMenuItem.Size = new System.Drawing.Size(240, 32);
+            this.showMenuItem.Size = new System.Drawing.Size(247, 32);
             this.showMenuItem.Text = "Show";
             this.showMenuItem.Click += new System.EventHandler(this.showMenuItem_Click);
+            // 
+            // menuSeparatorTop
+            // 
+            this.menuSeparatorTop.Name = "menuSeparatorTop";
+            this.menuSeparatorTop.Size = new System.Drawing.Size(244, 6);
+            // 
+            // configFileMenuItem
+            // 
+            this.configFileMenuItem.Name = "configFileMenuItem";
+            this.configFileMenuItem.Size = new System.Drawing.Size(247, 32);
+            this.configFileMenuItem.Text = "Open config file";
+            this.configFileMenuItem.Click += new System.EventHandler(this.configFileMenuItem_Click);
             // 
             // bootMenuItem
             // 
             this.bootMenuItem.Name = "bootMenuItem";
-            this.bootMenuItem.Size = new System.Drawing.Size(240, 32);
+            this.bootMenuItem.Size = new System.Drawing.Size(247, 32);
             this.bootMenuItem.Text = "Start at boot";
             this.bootMenuItem.Click += new System.EventHandler(this.bootMenuItem_Click);
             // 
             // menuSeparatorBottom
             // 
             this.menuSeparatorBottom.Name = "menuSeparatorBottom";
-            this.menuSeparatorBottom.Size = new System.Drawing.Size(237, 6);
+            this.menuSeparatorBottom.Size = new System.Drawing.Size(244, 6);
             // 
             // exitMenuItem
             // 
             this.exitMenuItem.Name = "exitMenuItem";
-            this.exitMenuItem.Size = new System.Drawing.Size(240, 32);
+            this.exitMenuItem.Size = new System.Drawing.Size(247, 32);
             this.exitMenuItem.Text = "Exit";
             this.exitMenuItem.Click += new System.EventHandler(this.exitMenuItem_Click);
             // 
-            // configFileMenuItem
+            // changeProfileMenuItem
             // 
-            this.configFileMenuItem.Name = "configFileMenuItem";
-            this.configFileMenuItem.Size = new System.Drawing.Size(240, 32);
-            this.configFileMenuItem.Text = "Open config file";
-            this.configFileMenuItem.Click += new System.EventHandler(this.configFileMenuItem_Click);
-            // 
-            // menuSeparatorTop
-            // 
-            this.menuSeparatorTop.Name = "menuSeparatorTop";
-            this.menuSeparatorTop.Size = new System.Drawing.Size(237, 6);
+            this.changeProfileMenuItem.Name = "changeProfileMenuItem";
+            this.changeProfileMenuItem.Size = new System.Drawing.Size(247, 32);
+            this.changeProfileMenuItem.Text = "Change recoil profile";
             // 
             // AppForm
             // 
@@ -140,5 +148,6 @@
         private System.Windows.Forms.ToolStripMenuItem exitMenuItem;
         private System.Windows.Forms.ToolStripSeparator menuSeparatorTop;
         private System.Windows.Forms.ToolStripMenuItem configFileMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem changeProfileMenuItem;
     }
 }

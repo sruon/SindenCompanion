@@ -107,7 +107,7 @@ namespace SindenHook
                                     else
                                     {
                                         lightgun.TestAutomaticRecoilStart();
-                                        Thread.Sleep(500);
+                                        Thread.Sleep(200);
                                         lightgun.TestAutomaticRecoilStop();
                                     }
                                 }
