@@ -95,6 +95,7 @@ namespace SindenCompanion
                             }
 
                             var value = memlib.ReadByte(matchedGp.Memscan.Code);
+
                             if (matchedGp.Memscan.Match.TryGetValue(value, out var profName))
                             {
                                 matchedRp = _conf.RecoilProfiles.FirstOrDefault(p => p.Name == profName);

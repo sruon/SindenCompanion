@@ -1,15 +1,67 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using SindenCompanionShared;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using FluentValidation;
+using System.Windows.Controls;
+using Microsoft.Diagnostics.Runtime.Utilities;
 
 namespace SindenCompanion
 
 {
+
+
+    public class RecoilProfileValidator : AbstractValidator<RecoilProfile>
+    {
+        public RecoilProfileValidator(Config parent)
+        {
+            RuleFor(x => x.Name).NotNull().NotEmpty().WithMessage("Recoil profile name is required.").
+                Must(x => UniqueName(parent, x)).
+                WithMessage(x => $"RecoilProfile.{x.Name} Duplicate profile names.");
+            // "Pulse Length (Strength)" 40-80, default value is 60
+            RuleFor(x => x.PulseLength).NotNull().InclusiveBetween(40, 80)
+                .WithMessage(profile => $"RecoilProfile.{profile.Name}.PulseLength must be between 40 and 80 (inclusive)."); ;
+            // "Delay Between Pulses (Speed)" 0(Fast)-50(Slow), default value is 10
+            RuleFor(x => x.DelayBetweenPulses).NotNull().InclusiveBetween(0, 50)
+                .WithMessage(profile => $"RecoilProfile.{profile.Name}.DelayBetweenPulses must be between 0 and 50 (inclusive)."); ;
+            // "Extra Delay After First Pulse" 0-16, default value is 0
+            RuleFor(x => x.DelayAfterFirstPulse).NotNull().InclusiveBetween(0, 16)
+                .WithMessage(profile => $"RecoilProfile.{profile.Name}.DelayAfterFirstPulse must be between 0 and 16 (inclusive)."); ;
+            // "Recoil Strength (Voltage)" 0(weakest)-10, default value is 10
+            RuleFor(x => x.Strength).NotNull().InclusiveBetween(0, 10)
+                .WithMessage(profile => $"RecoilProfile.{profile.Name}.Strength must be between 0 and 10 (inclusive)."); ;
+        }
+
+        private bool UniqueName(Config conf, string name)
+        {
+            var matching = conf.RecoilProfiles
+                .Count(x => x.Name.ToLower() == name.ToLower());
+
+            return matching <= 1;
+        }
+    }
+    public class ConfigValidator : AbstractValidator<Config>
+    {
+        public ConfigValidator()
+        {
+            RuleFor(x => x.Global).NotNull();
+            RuleFor(x => x.Global.IpcPort).InclusiveBetween(1025, 65535);
+            RuleFor(x => x.Global.Lightgun).Must(LightgunPathExists).
+                WithMessage("Global.Lightgun The path provided for Lightgun.exe does not exist.").When(x => !string.IsNullOrEmpty(x.Global.Lightgun));
+            RuleForEach(x => x.GameProfiles).SetValidator(parent => new GameProfileValidator(parent));
+            RuleForEach(x => x.RecoilProfiles).SetValidator(parent => new RecoilProfileValidator(parent));
+        }
+        private bool LightgunPathExists(string path)
+        {
+            return File.Exists(path);
+        }
+    }
+
     public class Config
     {
         private static Config _instance;
@@ -45,6 +97,16 @@ namespace SindenCompanion
                         .WithNamingConvention(UnderscoredNamingConvention.Instance)
                         .Build();
                     _instance = deserializer.Deserialize<Config>(streamReader.ReadToEnd());
+                    ConfigValidator validator = new ConfigValidator();
+                    FluentValidation.Results.ValidationResult result = validator.Validate(_instance);
+                    if (!result.IsValid)
+                    {
+                        foreach (var failure in result.Errors)
+                        {
+                            Console.WriteLine("Property " + failure.PropertyName + " failed validation. Error was: " + failure.ErrorMessage);
+                        }
+                        throw new Exception($"Invalid configuration file: {result.Errors.Count} errors.");
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -98,6 +160,46 @@ namespace SindenCompanion
             return false;
         }
     }
+    public enum ScanType
+    {
+        Byte = 1,
+        Short = 2,
+        Int = 3,
+        UInt = 4,
+        Float = 5,
+        Long = 6,
+        Double = 7,
+        String = 8,
+    }
+
+
+    public class GameProfileValidator : AbstractValidator<GameProfile>
+    {
+
+        public GameProfileValidator(Config parent)
+        {
+            // Uniqueness does not really matter for Game Profiles
+            RuleFor(x => x.Name).NotNull().NotEmpty();
+            RuleFor(x => x.Profile).NotNull().NotEmpty().Must(x => parent.RecoilProfiles.Any(p => p.Name == x)).
+                WithMessage(x => $"GameProfile.{x.Name}.Profile: Profile {x.Profile} does not exist.");
+            RuleFor(x => x.Match).NotNull().
+                WithMessage(x => $"GameProfile.{x.Name}.Match cannot be empty/missing.");
+            RuleFor(x => x.Match.Exe).NotNull().NotEmpty().When(x => x.Match != null && x.Match.Title == null).
+                WithMessage(x => $"GameProfile.{x.Name}.Match.Exe must be set when title is empty.");
+            RuleFor(x => x.Match.Title).NotNull().NotEmpty().When(x => x.Match != null && x.Match.Exe == null).
+                WithMessage(x => $"GameProfile.{x.Name}.Match.Title must be set when exe is empty.");
+            RuleFor(x => x.Memscan.Code).NotNull().When(x => x.Memscan != null)
+                .WithMessage("A valid pointer path must be provided.");
+            RuleFor(x => x.Memscan.Type).NotNull().Must(ValidScanType).When(x => x.Memscan != null).
+                WithMessage(x => $"GameProfile.{x.Name}.Memscan.Type: A valid type must be provided ({String.Join(", ",MemScan.TypeMap.Keys)})");
+            RuleFor(x => x.Memscan.Match).NotNull().NotEmpty().When(x => x.Memscan != null).WithMessage("A dictionary (value/profile name) must be provided");
+        }
+
+        public bool ValidScanType(string scantype)
+        {
+            return MemScan.TypeMap.Keys.Contains(scantype);
+        }
+    }
 
     public class GameMatchRule
     {
@@ -107,8 +209,19 @@ namespace SindenCompanion
 
     public class MemScan
     {
+        public static readonly Dictionary<string, ScanType> TypeMap = new Dictionary<string, ScanType>()
+        {
+            {"byte", ScanType.Byte},
+            {"short", ScanType.Short},
+            {"int", ScanType.Int},
+            {"uint", ScanType.UInt},
+            {"float", ScanType.Float},
+            {"long", ScanType.Long},
+            {"double", ScanType.Double},
+            {"string", ScanType.String},
+        };
         public string Code { get; set; }
-        public byte Size { get; set; }
+        public string Type { get; set; }
 
         public Dictionary<int, string> Match { get; set; }
     }

@@ -5,10 +5,10 @@
 recoil_profiles:
     - name: "Single"
       automatic: false
-      pulse_length: 0
+      pulse_length: 40
       delay_between_pulses: 0
       offscreen: false
-      strength: 50
+      strength: 10
     - name: "Auto_Fast"
       automatic: true
       pulse_length: 40
@@ -46,7 +46,7 @@ game_profiles:
         exe: "DeadContainment-Win64-Shipping.exe"
       memscan:
         code: DeadContainment-Win64-Shipping.exe+04AAF978,0x0,0x110,0x2F0,0x2E8
-        size: 1
+        type: byte
         match:
           0x0: "Single" # Not sure
           0x1: "Single" # Single fire
@@ -57,7 +57,7 @@ game_profiles:
         exe: "ac_client.exe"
       memscan:
         code: ac_client.exe+0x0018AC00,0x364,0x4
-        size: 1
+        type: byte
         match: 
           0x0: "Single" # Knife
           0x1: "Single" # Glock

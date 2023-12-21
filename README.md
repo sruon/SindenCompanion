@@ -1,7 +1,12 @@
 # Sinden Companion
 
 ## TODO
-- Support varying bytes for injection
+- Support varying bytes for memory reading
+- Configuration validation + error messages
+- Check we're injecting in the right driver (version match)
+- Work out some signaling to make sure we're not sending too many events too early
+- Document value ranges for configuration file
+- More game offsets
 
 ## Getting started
 - Download the most recent release from the release page

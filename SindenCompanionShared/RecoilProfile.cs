@@ -8,9 +8,9 @@ namespace SindenCompanionShared
     {
         public string Name { get; set; }
         public bool Automatic { get; set; }
-        public byte PulseLength { get; set; }
-        public byte DelayBetweenPulses { get; set; }
-        public byte DelayAfterFirstPulse { get; set; }
+        public int PulseLength { get; set; }
+        public int DelayBetweenPulses { get; set; }
+        public int DelayAfterFirstPulse { get; set; }
         public bool Offscreen { get; set; }
 
         public bool PumpOn { get; set; }
@@ -21,7 +21,7 @@ namespace SindenCompanionShared
         public bool RecoilFrontRight { get; set; }
         public bool RecoilBackRight { get; set; }
 
-        public byte Strength { get; set; }
+        public int Strength { get; set; }
 
         public static RecoilProfile FromString(string s)
         {
@@ -32,9 +32,9 @@ namespace SindenCompanionShared
         {
             var ret = new List<byte[]>()
             {
-                new byte[] { 170, 162, PulseLength, DelayAfterFirstPulse, PulseLength, DelayBetweenPulses, 187 },
+                new byte[] { 170, 162, (byte)PulseLength, (byte)DelayAfterFirstPulse, (byte)PulseLength, (byte)DelayBetweenPulses, 187 },
                 new byte[] { 170, 161, 1, 0, 0, 0, 187 },
-                new byte[] { 170, 167, Strength, 0, 0, 0, 187 },
+                new byte[] { 170, 167, (byte)Strength, 0, 0, 0, 187 },
                 new byte[] { 170, 163, Convert.ToByte(Automatic), 0, 0, 0, 187 },
                 new byte[]
                 {
