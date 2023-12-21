@@ -223,13 +223,29 @@ namespace SindenCompanion
         [DllImport("user32.dll")]
         private static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc,
             WinEventDelegate lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool AllocConsole();
+        [System.Runtime.InteropServices.DllImport("kernel32.dll")]
+        private static extern bool AttachConsole(int dwProcessId);
 
         [STAThread]
         private static void Main(string[] args)
         {
-            var conf = Config.GetInstance();
+            Config conf;
+            try
+            {
+                conf = Config.GetInstance();
+
+            }
+            catch (Exception e)
+            {
+                // Crash outright if we don't have a working config
+                throw new InvalidOperationException($"Failed to read configuration: {e}");
+            }
             var mainForm = new AppForm(conf);
             var logger = Logger.CreateDesktopLogger(conf.Global.Debug, mainForm.WpfRichTextBox);
+            Config.Logger = logger;
             var app = new App(logger);
             mainForm.SetCallback(app.ChangeProfile);
             SindenInjector injector = null;

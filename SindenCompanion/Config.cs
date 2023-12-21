@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using FluentValidation;
+using Serilog;
 using SindenCompanionShared;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -70,7 +71,7 @@ namespace SindenCompanion
     {
         private static Config _instance;
         private static FileSystemWatcher _fw;
-
+        public static ILogger Logger = null;
         public List<RecoilProfile> RecoilProfiles { get; set; } = new List<RecoilProfile>();
         public List<GameProfile> GameProfiles { get; set; } = new List<GameProfile>();
 
@@ -86,13 +87,17 @@ namespace SindenCompanion
                 _fw.Filter = "config.yaml";
                 _fw.Changed += new FileSystemEventHandler((e, a) =>
                 {
-                    Console.WriteLine("Detected change to config file.");
+                    if (Logger != null)
+                    {
+                        Logger.Information("Detected changes to config file.");
+                    }
                     _instance = null;
                 });
                 _fw.EnableRaisingEvents = true;
             }
+            if (Logger != null)
+                Logger.Information("Loading configuration.");
 
-            Console.WriteLine("Loading configuration.");
             using (var streamReader = new StreamReader(".\\config.yaml", Encoding.UTF8))
             {
                 try
@@ -105,15 +110,19 @@ namespace SindenCompanion
                     var result = validator.Validate(_instance);
                     if (!result.IsValid)
                     {
+                        string reason = "";
                         foreach (var failure in result.Errors)
-                            Console.WriteLine("Property " + failure.PropertyName + " failed validation. Error was: " +
-                                              failure.ErrorMessage);
-                        throw new Exception($"Invalid configuration file: {result.Errors.Count} errors.");
+                            reason += "Property " + failure.PropertyName + " failed validation. Error was: " +
+                                      failure.ErrorMessage + "\n";
+                        if (Logger != null)
+                            Logger.Error($"Invalid configuration file: {result.Errors.Count} errors: {reason}");
+                        throw new Exception($"Invalid configuration file: {result.Errors.Count} errors: {reason}");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed to instantiate configuration: {ex}");
+                    if (Logger != null)
+                        Logger.Error($"Failed to instantiate configuration: {ex}");
                     throw ex;
                 }
             }

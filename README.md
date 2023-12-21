@@ -2,6 +2,7 @@
 
 ## TODO
 - More game offsets
+- Pass logger to config
 
 ## Getting started
 - Download the most recent release from the release page
