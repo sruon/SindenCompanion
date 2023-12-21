@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Threading;
 using HoLLy.ManagedInjector;
 using Microsoft.Diagnostics.Runtime;
@@ -113,8 +114,25 @@ namespace SindenCompanion
             return _process != null && !_process.HasExited;
         }
 
+        private string SHA256CheckSum()
+        {
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                using (FileStream fileStream = File.OpenRead(_process.MainModule.FileName))
+                {
+                    return BitConverter.ToString(sha256.ComputeHash(fileStream)).Replace("-", "");
+                }
+            }
+        }
+
         public void Inject()
         {
+            var checksum = SHA256CheckSum();
+
+            if (checksum != "EE421F10B9CFAE3E7D9F32F1184CD643E683205B72FEDEA6A865E84E197E3538")
+            {
+                _logger.Warning("Remote process checksum did not match. This version of Sinden Lightgun may not be supported.");
+            }
             var dt = DataTarget.AttachToProcess(_process.Id, false);
             var dllAlreadyLoaded = dt
                 .ClrVersions

@@ -1,7 +1,6 @@
 # Sinden Companion
 
 ## TODO
-- Check we're injecting in the right driver (version match)
 - More game offsets
 
 ## Getting started
