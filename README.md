@@ -1,11 +1,8 @@
 # Sinden Companion
 
 ## TODO
-- Support varying bytes for memory reading
-- Configuration validation + error messages
 - Check we're injecting in the right driver (version match)
 - Work out some signaling to make sure we're not sending too many events too early
-- Document value ranges for configuration file
 - More game offsets
 
 ## Getting started
@@ -40,15 +37,15 @@ recoil_profiles:
     - name: "Single"
     # Automatic or single recoil
       automatic: false
-    # Pulse Length slider where X is Weakest and Y is Strongest
-      pulse_length: 0
-    # Delay between pulses in milliseconds where X is Fastest and Y is Slowest
+    # Pulse Length slider where 40 is Weakest and 80 is Strongest
+      pulse_length: 60
+    # Delay between pulses in milliseconds where 0 is Fastest and 50 is Slowest
       delay_between_pulses: 0
     # Should offscreen recoil be enabled?
       offscreen: false
-    # Strength of recoil where X is Weakest and Y is Strongest
-      strength: 50
-    # Delay after first pulse where X is shortest and Y is longest
+    # Strength of recoil where 0 is Weakest and 10 is Strongest
+      strength: 10
+    # Delay after first pulse where 0 is shortest and 16 is longest
       delay_after_first_pulse: 0
     # Pump recoil on event
       pump_on: false
@@ -76,8 +73,8 @@ game_profiles:
     memscan:
         # Pointer path to use
         code: mygame.exe+0x0018AC00,0x364,0x4
-        # How many bytes to read
-        size: 1
+        # Type of value to read (byte, short, int, uint)
+        type: "byte"
         # Matching values
         match:
         # Key corresponds to the value found in memory

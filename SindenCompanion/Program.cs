@@ -94,9 +94,32 @@ namespace SindenCompanion
                                 return;
                             }
 
-                            var value = memlib.ReadByte(matchedGp.Memscan.Code);
+                            dynamic value;
+                            string profName = null;
+                            switch (matchedGp.Memscan.Type)
+                            {
+                                case "byte":
+                                    value = memlib.ReadByte(matchedGp.Memscan.Code);
+                                    matchedGp.Memscan.Match.TryGetValue(value, out profName);
+                                    break;
+                                case "short": 
+                                    value = memlib.Read2Byte(matchedGp.Memscan.Code);
+                                    matchedGp.Memscan.Match.TryGetValue(value, out profName);
+                                    break;
+                                case "int":
+                                    value = memlib.ReadInt(matchedGp.Memscan.Code);
+                                    matchedGp.Memscan.Match.TryGetValue(value, out profName);
+                                    break;
+                                case "uint":
+                                    value = memlib.ReadUInt(matchedGp.Memscan.Code);
+                                    matchedGp.Memscan.Match.TryGetValue(value, out profName);
+                                    break;
+                                default:
+                                    _logger.Error("Unsupported memory scan type: {@Type}", matchedGp.Memscan.Type);
+                                    return;
+                            }
 
-                            if (matchedGp.Memscan.Match.TryGetValue(value, out var profName))
+                            if (!string.IsNullOrEmpty(profName))
                             {
                                 matchedRp = _conf.RecoilProfiles.FirstOrDefault(p => p.Name == profName);
                                 if (matchedRp == null)
@@ -152,6 +175,9 @@ namespace SindenCompanion
                      select MessageBuilder.FromMessage(msg))
                 switch (e.Type)
                 {
+                    case "ready": 
+                        _logger.Information("Client signaled it's ready.");
+                        break;
                     case "recoilack":
                         if (!(bool)e.Payload)
                             _logger.Error($"Failed to recoil");
