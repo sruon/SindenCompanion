@@ -58,7 +58,12 @@ namespace SindenHook
                     if (type != null)
                     {
                         _lightguns = (List<SindenLightgun>)type.GetValue(f1);
-                        _logger.Information("Found list of lightguns {@Count}", _lightguns.Count);
+                        _logger.Information("Found list with {@Count} guns", _lightguns.Count);
+                        if (_lightguns.Count == 0)
+                        {
+                            _logger.Information("Waiting for driver to finish initializing guns");
+                            continue;
+                        }
                     }
                     else
                     {
@@ -88,6 +93,13 @@ namespace SindenHook
                     Envelope ev;
                     switch (e.Type)
                     {
+                        case "serverready":
+                            if (_lightguns != null && _lightguns.Count > 0)
+                            {
+                                ev = MessageBuilder.Build("ready", _lightguns);
+                                _client.SendMessage(ev.AsMessage());
+                            }
+                            break;
                         case "ping":
                             ev = MessageBuilder.Build("pong", null);
                             _client.SendMessage(ev.AsMessage());

@@ -2,7 +2,6 @@
 
 ## TODO
 - Check we're injecting in the right driver (version match)
-- Work out some signaling to make sure we're not sending too many events too early
 - More game offsets
 
 ## Getting started

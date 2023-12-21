@@ -15,6 +15,7 @@ namespace SindenCompanion
         private readonly ILogger _logger;
         private readonly Dictionary<uint, Mem> _memReaders;
         private readonly ServerInterface _server;
+        private bool _clientReady = false;
         private Config _conf;
         private RecoilProfile _currentProfile;
 
@@ -39,6 +40,10 @@ namespace SindenCompanion
             _currentProfile = rp;
         }
 
+        public void InjectionNotification()
+        {
+            _server.SendMessage(MessageBuilder.Build("serverready", null).AsMessage());
+        }
         private Mem GetMemoryReader(uint processId)
         {
             Mem memlib;
@@ -62,7 +67,12 @@ namespace SindenCompanion
         public void WindowEventHandler(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild,
             uint dwEventThread, uint dwmsEventTime)
         {
-            _logger.Information("Foreground window changed");
+            _logger.Debug("Foreground window changed");
+            if (!_clientReady)
+            {
+                _logger.Information("Client not ready, ignoring window change");
+                return;
+            }
             _conf = Config.GetInstance();
             var fp = new ForegroundProcess();
             var matchedGp = _conf.GameProfiles.FirstOrDefault(x => x.Matches(fp));
@@ -177,6 +187,7 @@ namespace SindenCompanion
                 {
                     case "ready": 
                         _logger.Information("Client signaled it's ready.");
+                        _clientReady = true;
                         break;
                     case "recoilack":
                         if (!(bool)e.Payload)
@@ -222,15 +233,14 @@ namespace SindenCompanion
             SindenInjector injector = null;
             new Thread(() =>
             {
-                injector = new SindenInjector(conf, logger);
-                injector.Inject();
                 while (true)
                 {
-                    if (!injector.IsAlive())
+                    if (injector == null || !injector.IsAlive())
                     {
                         logger.Error("Lightgun.exe died, will attempt to restart. This will fail if path is not set.");
                         injector = new SindenInjector(conf, logger);
                         injector.Inject();
+                        app.InjectionNotification();
                     }
 
                     Thread.Sleep(1000);
