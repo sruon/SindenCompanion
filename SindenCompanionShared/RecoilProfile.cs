@@ -32,7 +32,11 @@ namespace SindenCompanionShared
         {
             var ret = new List<byte[]>()
             {
-                new byte[] { 170, 162, (byte)PulseLength, (byte)DelayAfterFirstPulse, (byte)PulseLength, (byte)DelayBetweenPulses, 187 },
+                new byte[]
+                {
+                    170, 162, (byte)PulseLength, (byte)DelayAfterFirstPulse, (byte)PulseLength,
+                    (byte)DelayBetweenPulses, 187
+                },
                 new byte[] { 170, 161, 1, 0, 0, 0, 187 },
                 new byte[] { 170, 167, (byte)Strength, 0, 0, 0, 187 },
                 new byte[] { 170, 163, Convert.ToByte(Automatic), 0, 0, 0, 187 },

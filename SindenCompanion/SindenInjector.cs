@@ -116,9 +116,9 @@ namespace SindenCompanion
 
         private string SHA256CheckSum()
         {
-            using (SHA256 sha256 = SHA256.Create())
+            using (var sha256 = SHA256.Create())
             {
-                using (FileStream fileStream = File.OpenRead(_process.MainModule.FileName))
+                using (var fileStream = File.OpenRead(_process.MainModule.FileName))
                 {
                     return BitConverter.ToString(sha256.ComputeHash(fileStream)).Replace("-", "");
                 }
@@ -130,9 +130,9 @@ namespace SindenCompanion
             var checksum = SHA256CheckSum();
 
             if (checksum != "EE421F10B9CFAE3E7D9F32F1184CD643E683205B72FEDEA6A865E84E197E3538")
-            {
-                _logger.Warning("Remote process checksum did not match. This version of Sinden Lightgun may not be supported.");
-            }
+                _logger.Warning(
+                    "Remote process checksum did not match. This version of Sinden Lightgun may not be supported.");
+
             var dt = DataTarget.AttachToProcess(_process.Id, false);
             var dllAlreadyLoaded = dt
                 .ClrVersions

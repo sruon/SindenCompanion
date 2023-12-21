@@ -14,10 +14,10 @@ namespace SindenCompanionShared
     public class ServerInterface : IDisposable
     {
         private readonly RecvCallback _callback;
-        private ILogger _logger;
         private readonly NetMQPoller _poller;
         private readonly PullSocket _puller;
         private readonly PushSocket _pusher;
+        private ILogger _logger;
 
         public ServerInterface(bool isServer, int ipcPort, ILogger logger, RecvCallback callback)
         {

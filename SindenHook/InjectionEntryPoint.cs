@@ -14,8 +14,8 @@ namespace SindenHook
     {
         private readonly ServerInterface _client;
         private readonly ILogger _logger;
-        private RecoilProfile _lastProfile;
         private bool _isReady;
+        private RecoilProfile _lastProfile;
 
         private List<SindenLightgun> _lightguns;
 
@@ -44,7 +44,6 @@ namespace SindenHook
             }
 
             _logger.Information("Found main app form");
-
 
 
             while (!_isReady)
@@ -99,6 +98,7 @@ namespace SindenHook
                                 ev = MessageBuilder.Build("ready", _lightguns);
                                 _client.SendMessage(ev.AsMessage());
                             }
+
                             break;
                         case "ping":
                             ev = MessageBuilder.Build("pong", null);

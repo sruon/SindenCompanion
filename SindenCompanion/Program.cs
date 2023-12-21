@@ -44,6 +44,7 @@ namespace SindenCompanion
         {
             _server.SendMessage(MessageBuilder.Build("serverready", null).AsMessage());
         }
+
         private Mem GetMemoryReader(uint processId)
         {
             Mem memlib;
@@ -73,6 +74,7 @@ namespace SindenCompanion
                 _logger.Information("Client not ready, ignoring window change");
                 return;
             }
+
             _conf = Config.GetInstance();
             var fp = new ForegroundProcess();
             var matchedGp = _conf.GameProfiles.FirstOrDefault(x => x.Matches(fp));
@@ -112,7 +114,7 @@ namespace SindenCompanion
                                     value = memlib.ReadByte(matchedGp.Memscan.Code);
                                     matchedGp.Memscan.Match.TryGetValue(value, out profName);
                                     break;
-                                case "short": 
+                                case "short":
                                     value = memlib.Read2Byte(matchedGp.Memscan.Code);
                                     matchedGp.Memscan.Match.TryGetValue(value, out profName);
                                     break;
@@ -185,7 +187,7 @@ namespace SindenCompanion
                      select MessageBuilder.FromMessage(msg))
                 switch (e.Type)
                 {
-                    case "ready": 
+                    case "ready":
                         _logger.Information("Client signaled it's ready.");
                         _clientReady = true;
                         break;
