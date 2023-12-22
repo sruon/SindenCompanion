@@ -1,9 +1,5 @@
 # Sinden Companion
 
-## TODO
-- More game offsets
-- Pass logger to config
-
 ## Getting started
 - Download the most recent release from the release page
 - Unzip the content in the same folder as Lightgun.exe
@@ -70,8 +66,9 @@ game_profiles:
         title: "My Game"
     # Optional : Set a memory reader to read the game's memory and change profile dynamically
     memscan:
-        # Pointer path to use
-        code: mygame.exe+0x0018AC00,0x364,0x4
+        # Pointer paths to use. First element maps to Player 1, second to Player 2.
+        paths: 
+          - mygame.exe+0x0018AC00,0x364,0x4
         # Type of value to read (byte, short, int, uint)
         type: "byte"
         # Matching values
@@ -84,47 +81,6 @@ game_profiles:
           0x7: "Single" # Sniper
 ```
 
-## Simple configuration file for testing
-
-```yaml
-global:
-    recoil_on_switch: true
-    debug: true
-recoil_profiles:
-    - name: "Single"
-      automatic: false
-      pulse_length: 0
-      delay_between_pulses: 0
-      offscreen: false
-      strength: 50
-    - name: "Auto_Fast"
-      automatic: true
-      pulse_length: 40
-      delay_between_pulses: 3
-      offscreen: false
-      strength: 3
-game_profiles:
-    - name: "Notepad"
-      profile: "Auto_Fast"
-      match:
-        exe: "Notepad.exe"
-    - name: "Sinden"
-      profile: "Single"
-      match:
-        title: "SindenLightgun"
-    - name: "Assault Cube"
-      profile: "Single"
-      match:
-        exe: "ac_client.exe"
-      memscan:
-        code: ac_client.exe+0x0018AC00,0x364,0x4
-        size: 1
-        match: 
-          0x0: "Single" # Knife
-          0x1: "Single" # Glock
-          0x6: "Auto_Fast" # AR
-          0x7: "Single" # Sniper
-```
 
 Launching the application and switching between Notepad and Lightgun.exe should produce recoil events.
 

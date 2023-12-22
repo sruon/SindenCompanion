@@ -4,6 +4,41 @@ using Newtonsoft.Json;
 
 namespace SindenCompanionShared
 {
+    public class Response<T>
+    {
+        public bool Success { get; set; }
+        public string Reason { get; set; }
+
+        public static Response<T> FromString(string s)
+        {
+            return JsonConvert.DeserializeObject<Response<T>>(s);
+        }
+    }
+
+    public class RecoilResponse : Response<RecoilResponse>
+    {
+    }
+
+    public class RecoilProfileResponse : Response<RecoilResponse>
+    {
+        public int PlayerIndex { get; set; }
+    }
+
+    public class RecoilProfileWrapper
+    {
+        public RecoilProfile RecoilProfile { get; set; }
+
+        // -1: all
+        // 0: player 1
+        // 1: player 2
+        public int Player { get; set; }
+
+        public static RecoilProfileWrapper FromString(string s)
+        {
+            return JsonConvert.DeserializeObject<RecoilProfileWrapper>(s);
+        }
+    }
+
     public class RecoilProfile
     {
         public string Name { get; set; }

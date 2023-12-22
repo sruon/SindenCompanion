@@ -17,7 +17,7 @@ namespace SindenCompanion
         private readonly Config _conf;
         public readonly RichTextBox WpfRichTextBox;
 
-        private Action<RecoilProfile> _callback;
+        private Action<int, RecoilProfile> _callback;
 
         private bool _userRequestedClose;
 
@@ -50,7 +50,7 @@ namespace SindenCompanion
             WpfRichTextBox = wpfRichTextBox;
         }
 
-        public void SetCallback(Action<RecoilProfile> callback)
+        public void SetCallback(Action<int, RecoilProfile> callback)
         {
             _callback = callback;
         }
@@ -115,7 +115,7 @@ namespace SindenCompanion
             foreach (var profile in _conf.RecoilProfiles)
             {
                 var item = new ToolStripMenuItem(profile.Name);
-                item.Click += (s, a) => { _callback(profile); };
+                item.Click += (s, a) => { _callback(-1,profile); };
                 changeProfileMenuItem.DropDownItems.Add(item);
             }
         }

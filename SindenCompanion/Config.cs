@@ -87,14 +87,12 @@ namespace SindenCompanion
                 _fw.Filter = "config.yaml";
                 _fw.Changed += new FileSystemEventHandler((e, a) =>
                 {
-                    if (Logger != null)
-                    {
-                        Logger.Information("Detected changes to config file.");
-                    }
+                    if (Logger != null) Logger.Information("Detected changes to config file.");
                     _instance = null;
                 });
                 _fw.EnableRaisingEvents = true;
             }
+
             if (Logger != null)
                 Logger.Information("Loading configuration.");
 
@@ -110,7 +108,7 @@ namespace SindenCompanion
                     var result = validator.Validate(_instance);
                     if (!result.IsValid)
                     {
-                        string reason = "";
+                        var reason = "";
                         foreach (var failure in result.Errors)
                             reason += "Property " + failure.PropertyName + " failed validation. Error was: " +
                                       failure.ErrorMessage + "\n";
@@ -167,7 +165,7 @@ namespace SindenCompanion
 
             if ($"{fp.ProcessName}.exe" == Match.Exe) return true;
 
-            if (Match.Title == fp.WindowTitle) return true;
+            if (!string.IsNullOrEmpty(Match.Title) && Match.Title == fp.WindowTitle) return true;
 
             return false;
         }
@@ -199,8 +197,8 @@ namespace SindenCompanion
                 .WithMessage(x => $"GameProfile.{x.Name}.Match.Exe must be set when title is empty.");
             RuleFor(x => x.Match.Title).NotNull().NotEmpty().When(x => x.Match != null && x.Match.Exe == null)
                 .WithMessage(x => $"GameProfile.{x.Name}.Match.Title must be set when exe is empty.");
-            RuleFor(x => x.Memscan.Code).NotNull().When(x => x.Memscan != null)
-                .WithMessage("A valid pointer path must be provided.");
+            RuleFor(x => x.Memscan.Paths).NotNull().NotEmpty().Must(x => x.Length <= 2).When(x => x.Memscan != null)
+                .WithMessage("At least one pointer path must be provided. At most two pointer paths can be provided.");
             RuleFor(x => x.Memscan.Type).NotNull().Must(ValidScanType).When(x => x.Memscan != null).WithMessage(x =>
                 $"GameProfile.{x.Name}.Memscan.Type: A valid type must be provided ({string.Join(", ", MemScan.TypeMap.Keys)})");
             RuleFor(x => x.Memscan.Match).NotNull().NotEmpty().When(x => x.Memscan != null)
@@ -233,7 +231,7 @@ namespace SindenCompanion
             //{"string", ScanType.String},
         };
 
-        public string Code { get; set; }
+        public string[] Paths { get; set; }
         public string Type { get; set; }
 
         public Dictionary<int, string> Match { get; set; }

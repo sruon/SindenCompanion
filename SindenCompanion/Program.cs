@@ -17,7 +17,7 @@ namespace SindenCompanion
         private readonly ServerInterface _server;
         private bool _clientReady = false;
         private Config _conf;
-        private RecoilProfile _currentProfile;
+        private List<RecoilProfile> _currentProfile = new List<RecoilProfile> { null, null };
 
         public App(ILogger logger)
         {
@@ -33,11 +33,20 @@ namespace SindenCompanion
             foreach (var memlib in _memReaders.Values) memlib.CloseProcess();
         }
 
-        public void ChangeProfile(RecoilProfile rp)
+        public void ChangeProfile(int playerIndex, RecoilProfile rp)
         {
-            _server.SendMessage(MessageBuilder.Build("profile", rp).AsMessage());
-            if (_conf.Global.RecoilOnSwitch) _server.SendMessage(MessageBuilder.Build("recoil", null).AsMessage());
-            _currentProfile = rp;
+            var rpw = new RecoilProfileWrapper()
+            {
+                RecoilProfile = rp,
+                Player = playerIndex
+            };
+            _server.SendMessage(MessageBuilder.Build("profile", rpw).AsMessage());
+            if (_conf.Global.RecoilOnSwitch)
+                _server.SendMessage(MessageBuilder.Build("recoil", playerIndex).AsMessage());
+            if (playerIndex == -1)
+                _currentProfile = new List<RecoilProfile> { rp, rp };
+            else
+                _currentProfile[playerIndex] = rp;
         }
 
         public void InjectionNotification()
@@ -106,54 +115,75 @@ namespace SindenCompanion
                                 return;
                             }
 
-                            dynamic value;
-                            string profName = null;
-                            switch (matchedGp.Memscan.Type)
+                            var idx = 0;
+                            foreach (var path in matchedGp.Memscan.Paths)
                             {
-                                case "byte":
-                                    value = memlib.ReadByte(matchedGp.Memscan.Code);
-                                    matchedGp.Memscan.Match.TryGetValue(value, out profName);
-                                    break;
-                                case "short":
-                                    value = memlib.Read2Byte(matchedGp.Memscan.Code);
-                                    matchedGp.Memscan.Match.TryGetValue(value, out profName);
-                                    break;
-                                case "int":
-                                    value = memlib.ReadInt(matchedGp.Memscan.Code);
-                                    matchedGp.Memscan.Match.TryGetValue(value, out profName);
-                                    break;
-                                case "uint":
-                                    value = memlib.ReadUInt(matchedGp.Memscan.Code);
-                                    matchedGp.Memscan.Match.TryGetValue(value, out profName);
-                                    break;
-                                default:
-                                    _logger.Error("Unsupported memory scan type: {@Type}", matchedGp.Memscan.Type);
-                                    return;
-                            }
-
-                            if (!string.IsNullOrEmpty(profName))
-                            {
-                                matchedRp = _conf.RecoilProfiles.FirstOrDefault(p => p.Name == profName);
-                                if (matchedRp == null)
+                                dynamic value;
+                                string profName = null;
+                                try
                                 {
-                                    _logger.Error(
-                                        "[{@Game}][MEM] {@Value} -> {@Profile} not found. Check your configuration.",
-                                        matchedGp.Name, value, profName);
+                                    switch (matchedGp.Memscan.Type)
+                                    {
+                                        case "byte":
+                                            value = memlib.ReadByte(path);
+                                            matchedGp.Memscan.Match.TryGetValue(value, out profName);
+                                            break;
+                                        case "short":
+                                            value = memlib.Read2Byte(path);
+                                            matchedGp.Memscan.Match.TryGetValue(value, out profName);
+                                            break;
+                                        case "int":
+                                            value = memlib.ReadInt(path);
+                                            matchedGp.Memscan.Match.TryGetValue(value, out profName);
+                                            break;
+                                        case "uint":
+                                            value = memlib.ReadUInt(path);
+                                            matchedGp.Memscan.Match.TryGetValue(value, out profName);
+                                            break;
+                                        default:
+                                            _logger.Error("Unsupported memory scan type: {@Type}",
+                                                matchedGp.Memscan.Type);
+                                            return;
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    _logger.Error(e,
+                                        "[P{@Index}] Exception while reading memory. The application may still be initializing or the pointer path is incorrect: {@Exception}",
+                                        idx + 1, e);
                                     continue;
                                 }
-                            }
-                            else
-                            {
-                                _logger.Error("[{@Game}][MEM] {@Value} -> No profile found. Check your configuration.",
-                                    matchedGp.Name, value);
-                                continue;
-                            }
 
-                            if (matchedRp != _currentProfile)
-                            {
-                                _logger.Information("[{@Game}][MEM] {@Value} -> {@Profile}", matchedGp.Name, value,
-                                    matchedRp.Name);
-                                ChangeProfile(matchedRp);
+                                _logger.Debug("[P{@Index}] Memory scan result: {@Value} -> {@Profile}", idx + 1, value,
+                                    profName);
+                                if (!string.IsNullOrEmpty(profName))
+                                {
+                                    matchedRp = _conf.RecoilProfiles.FirstOrDefault(p => p.Name == profName);
+                                    if (matchedRp == null)
+                                    {
+                                        _logger.Error(
+                                            "[{@Game}][MEM][Player {@Index}] {@Value} -> {@Profile} not found. Check your configuration.",
+                                            matchedGp.Name, idx + 1, value, profName);
+                                        continue;
+                                    }
+                                }
+                                else
+                                {
+                                    _logger.Error(
+                                        "[{@Game}][MEM][Player {@Index}] {@Value} -> No profile found. Check your configuration.",
+                                        matchedGp.Name, idx + 1, value);
+                                    continue;
+                                }
+
+                                if (matchedRp != _currentProfile[idx])
+                                {
+                                    _logger.Information("[{@Game}][MEM][Player {@Index}] {@Value} -> {@Profile}",
+                                        matchedGp.Name, idx + 1, value,
+                                        matchedRp.Name);
+                                    ChangeProfile(idx, matchedRp);
+                                }
+
+                                idx++;
                             }
 
 
@@ -171,10 +201,10 @@ namespace SindenCompanion
                         return;
                     }
 
-                    if (matchedRp != _currentProfile)
+                    if (matchedRp != _currentProfile[0])
                     {
                         _logger.Information("[{@Game}] {@Profile}", matchedGp.Name, matchedRp.Name);
-                        ChangeProfile(matchedRp);
+                        ChangeProfile(-1, matchedRp);
                     }
                 }
             }
@@ -192,22 +222,28 @@ namespace SindenCompanion
                         _clientReady = true;
                         break;
                     case "recoilack":
-                        if (!(bool)e.Payload)
-                            _logger.Error($"Failed to recoil");
+                        var recoilResp = RecoilResponse.FromString(e.Payload.ToString());
+                        if (!recoilResp.Success)
+                            _logger.Error("Failed to recoil: {@Reason}", recoilResp.Reason);
                         else
-                            _logger.Information($"Recoil ACK - Success");
+                            _logger.Information($"Recoil success");
                         break;
                     case "profileack":
-                        var suc = (bool)e.Payload;
-                        if (!suc)
-                        {
-                            _logger.Error($"Failed to apply profile, Sinden may still be initializing - will retry");
-                            _currentProfile = null;
-                        }
+                        var resp = RecoilProfileResponse.FromString(e.Payload.ToString());
+
+                        if (!resp.Success)
+                            switch (resp.Reason)
+                            {
+                                case "No lightgun at requested index.":
+                                    _logger.Error(
+                                        $"Failed to apply profile -> No lightgun detected at requested player index");
+                                    break;
+                                default:
+                                    _logger.Error("Failed to apply profile: {@Reason}", resp.Reason);
+                                    break;
+                            }
                         else
-                        {
-                            _logger.Information("Successfully applied profile. {@Profile}", _currentProfile);
-                        }
+                            _logger.Information("Successfully applied profiles. {@Profile}", _currentProfile);
 
                         break;
                 }
@@ -223,11 +259,7 @@ namespace SindenCompanion
         [DllImport("user32.dll")]
         private static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc,
             WinEventDelegate lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
-        [DllImport("kernel32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool AllocConsole();
-        [System.Runtime.InteropServices.DllImport("kernel32.dll")]
-        private static extern bool AttachConsole(int dwProcessId);
+
 
         [STAThread]
         private static void Main(string[] args)
@@ -236,13 +268,13 @@ namespace SindenCompanion
             try
             {
                 conf = Config.GetInstance();
-
             }
             catch (Exception e)
             {
                 // Crash outright if we don't have a working config
                 throw new InvalidOperationException($"Failed to read configuration: {e}");
             }
+
             var mainForm = new AppForm(conf);
             var logger = Logger.CreateDesktopLogger(conf.Global.Debug, mainForm.WpfRichTextBox);
             Config.Logger = logger;

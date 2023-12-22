@@ -67,7 +67,7 @@ namespace SindenCompanion
                 else
                 {
                     _logger.Error("Could not find Lightgun.exe - start it before or specify path in config file.");
-                    throw new Exception("Lightgun.exe not found");
+                    throw new Exception("Lightgun.exe not found and path not set in config.");
                 }
             }
             else

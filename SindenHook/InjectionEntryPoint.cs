@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
@@ -15,7 +16,7 @@ namespace SindenHook
         private readonly ServerInterface _client;
         private readonly ILogger _logger;
         private bool _isReady;
-        private RecoilProfile _lastProfile;
+        private List<RecoilProfile> _lastProfile = new List<RecoilProfile> { null, null };
 
         private List<SindenLightgun> _lightguns;
 
@@ -48,7 +49,7 @@ namespace SindenHook
 
             while (!_isReady)
             {
-                Thread.Sleep(200);
+                Thread.Sleep(1000);
 
                 try
                 {
@@ -109,52 +110,121 @@ namespace SindenHook
                             _client.SendMessage(ev.AsMessage());
                             break;
                         case "recoil":
-                            if (_lightguns == null || _lightguns.Count == 0 || _lastProfile == null)
+                            var pIndex = Convert.ToInt32(e.Payload);
+                            if (_lightguns == null || _lightguns.Count == 0 ||
+                                _lastProfile.ElementAtOrDefault(Math.Max(pIndex, 0)) == null)
                             {
-                                ev = MessageBuilder.Build("recoilack", false);
+                                ev = MessageBuilder.Build("recoilack", new RecoilResponse
+                                {
+                                    Reason = "Sinden drivers not yet initialized or no lightguns connected.",
+                                    Success = false
+                                });
                                 _client.SendMessage(ev.AsMessage());
                                 break;
                             }
 
-                            foreach (var lightgun in _lightguns)
-                                if (!_lastProfile.Automatic)
+                            if (pIndex == -1)
+                            {
+                                foreach (var lightgun in _lightguns)
+                                    if (!_lastProfile.ElementAtOrDefault(0).Automatic)
+                                    {
+                                        lightgun.TestSingleShotRecoil();
+                                    }
+                                    else
+                                    {
+                                        lightgun.TestAutomaticRecoilStart();
+                                        Thread.Sleep(200);
+                                        lightgun.TestAutomaticRecoilStop();
+                                    }
+                            }
+                            else
+                            {
+                                if (_lightguns.ElementAtOrDefault(pIndex) != null)
                                 {
-                                    lightgun.TestSingleShotRecoil();
+                                    if (!_lastProfile[pIndex].Automatic)
+                                    {
+                                        _lightguns[pIndex].TestSingleShotRecoil();
+                                    }
+                                    else
+                                    {
+                                        _lightguns[pIndex].TestAutomaticRecoilStart();
+                                        Thread.Sleep(200);
+                                        _lightguns[pIndex].TestAutomaticRecoilStop();
+                                    }
                                 }
                                 else
                                 {
-                                    lightgun.TestAutomaticRecoilStart();
-                                    Thread.Sleep(200);
-                                    lightgun.TestAutomaticRecoilStop();
+                                    ev = MessageBuilder.Build("recoilack", new RecoilResponse
+                                    {
+                                        Reason = $"No lightgun at requested index.",
+                                        Success = false
+                                    });
+                                    _client.SendMessage(ev.AsMessage());
+                                    break;
                                 }
+                            }
 
-                            ev = MessageBuilder.Build("recoilack", true);
-
+                            ev = MessageBuilder.Build("recoilack", new RecoilResponse
+                            {
+                                Success = true
+                            });
 
                             _client.SendMessage(ev.AsMessage());
                             break;
                         case "profile":
                             if (_lightguns == null || _lightguns.Count == 0)
                             {
-                                ev = MessageBuilder.Build("profileack", false);
+                                ev = MessageBuilder.Build("profileack",
+                                    new RecoilProfileResponse
+                                    {
+                                        Success = false,
+                                        Reason = "Sinden drivers not yet initialized or no lightguns connected."
+                                    });
                                 _client.SendMessage(ev.AsMessage());
                                 break;
                             }
 
-                            var rp = RecoilProfile.FromString(e.Payload.ToString());
-                            if (_lastProfile != null && _lastProfile.Name == rp.Name) break;
+                            var rpw = RecoilProfileWrapper.FromString(e.Payload.ToString());
+                            var rp = rpw.RecoilProfile;
+                            if (_lastProfile.ElementAtOrDefault(Math.Max(rpw.Player, 0)) != null &&
+                                _lastProfile.ElementAtOrDefault(Math.Max(rpw.Player, 0)).Name == rp.Name) break;
 
-                            var success = false;
-                            foreach (var lightgun in _lightguns)
+                            var response = new RecoilProfileResponse();
+                            if (rpw.Player == -1)
                             {
-                                success = lightgun.UpdateRecoilFromProfile(rp);
-                                if (success) continue;
-                                _logger.Error($"Failed to apply profile to {lightgun.lightgunOwner.ToString()}");
-                                break;
+                                foreach (var lightgun in _lightguns)
+                                {
+                                    response.Success = lightgun.UpdateRecoilFromProfile(rp);
+                                    if (response.Success) continue;
+                                    response.Reason = $"Failed to apply profile to {lightgun.lightgunOwner.ToString()}";
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                if (_lightguns.ElementAtOrDefault(rpw.Player) != null)
+                                {
+                                    response.Success = _lightguns[rpw.Player].UpdateRecoilFromProfile(rp);
+                                    if (!response.Success)
+                                        response.Reason =
+                                            $"Failed to apply profile to {_lightguns[rpw.Player].lightgunOwner.ToString()}";
+                                }
+                                else
+                                {
+                                    response.Success = false;
+                                    response.Reason = $"No lightgun at requested index.";
+                                }
                             }
 
-                            if (success) _lastProfile = rp;
-                            ev = MessageBuilder.Build("profileack", success);
+                            if (response.Success)
+                            {
+                                if (rpw.Player == -1)
+                                    _lastProfile = new List<RecoilProfile> { rp, rp };
+                                else
+                                    _lastProfile[rpw.Player] = rp;
+                            }
+
+                            ev = MessageBuilder.Build("profileack", response);
 
                             _client.SendMessage(ev.AsMessage());
                             break;
@@ -169,6 +239,7 @@ namespace SindenHook
 #pragma warning restore IDE0051
         {
             var injectionArguments = JsonConvert.DeserializeObject<InjectionArguments>(args);
+            Thread.CurrentThread.IsBackground = true;
             var app = new EntryPoint(injectionArguments);
             app.Execute();
             return 0;

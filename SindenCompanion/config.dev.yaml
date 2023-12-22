@@ -1,5 +1,6 @@
 ﻿global:
     recoil_on_switch: true
+    lightgun: "C:\\Users\\sruon\\OneDrive\\Bureau\\Sinden\\LightgunBeta2.05\\Lightgun.exe"
     debug: true
 recoil_profiles:
     - name: "Single"
