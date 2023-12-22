@@ -150,6 +150,10 @@ namespace SindenCompanion
 
         public string Profile { get; set; }
 
+        public bool OffscreenReload { get; set; } = false;
+
+        public string InputType { get; set; } = "joystick";
+
         public GameMatchRule Match { get; set; }
 
         public MemScan Memscan { get; set; }
@@ -203,6 +207,8 @@ namespace SindenCompanion
                 $"GameProfile.{x.Name}.Memscan.Type: A valid type must be provided ({string.Join(", ", MemScan.TypeMap.Keys)})");
             RuleFor(x => x.Memscan.Match).NotNull().NotEmpty().When(x => x.Memscan != null)
                 .WithMessage("A dictionary (value/profile name) must be provided");
+            RuleFor(x => x.InputType).Must(x => x == "mouse" || x == "joystick")
+                .WithMessage($"GameProfile.{x.Name}.InputType must be either 'mouse' or 'joystick'");
         }
 
         public bool ValidScanType(string scantype)
