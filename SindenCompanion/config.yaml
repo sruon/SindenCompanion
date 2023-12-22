@@ -35,6 +35,8 @@ recoil_profiles:
 game_profiles:
     - name: "House of the Dead 4"
       profile: "Auto_Fast"
+      offscreen_reload: false
+      input_type: "joystick"
       match:
         exe: "BudgieLoader.exe"
         title: "TeknoBudgie - House of the Dead 4"
@@ -44,6 +46,7 @@ game_profiles:
         exe: "FarCry_r.exe"
     - name: "Sinden"
       profile: "Single"
+      input_type: "mouse"
       match:
         title: "SindenLightgun"
     - name: "House of the Dead: Scarlet Dawn"

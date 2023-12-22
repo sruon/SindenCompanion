@@ -1,5 +1,11 @@
 # Sinden Companion
 
+## Requirements
+- Sinden Windows 2.05beta driver
+- Firmware 1.9
+
+Any other combination is **untested**.
+
 ## Getting started
 - Download the most recent release from the release page
 - Unzip the content in the same folder as Lightgun.exe
