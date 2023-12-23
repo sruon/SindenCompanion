@@ -57,7 +57,12 @@ namespace SindenCompanion
         private Mem GetMemoryReader(uint processId)
         {
             Mem memlib;
-            if (_memReaders.TryGetValue(processId, out memlib)) return memlib;
+            if (_memReaders.TryGetValue(processId, out memlib))
+            {
+                if (memlib.mProc.MainModule == null) _memReaders[processId] = null;
+                return memlib;
+            }
+
             _memReaders[processId] = new Mem();
             var suc = _memReaders[processId].OpenProcess((int)processId, out var failReason);
             if (!suc)
@@ -77,7 +82,8 @@ namespace SindenCompanion
         public void WindowEventHandler(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild,
             uint dwEventThread, uint dwmsEventTime)
         {
-            _logger.Debug("Foreground window changed");
+            var fp = new ForegroundProcess();
+            _logger.Debug("[{@PID}][{@ProcName}][{@WindowTitle}]", fp.ProcessId, fp.ProcessName, fp.WindowTitle);
             if (!_clientReady)
             {
                 _logger.Information("Client not ready, ignoring window change");
@@ -85,23 +91,25 @@ namespace SindenCompanion
             }
 
             _conf = Config.GetInstance();
-            var fp = new ForegroundProcess();
             var matchedGp = _conf.GameProfiles.FirstOrDefault(x => x.Matches(fp));
             if (matchedGp != null)
             {
                 RecoilProfile matchedRp = null;
                 if (matchedGp.Memscan != null) // Continuous swap based on memory
                 {
-                    Mem memlib;
+                    Mem memlib = null;
 
-                    try
-                    {
-                        memlib = GetMemoryReader(fp.ProcessId);
-                    }
-                    catch
-                    {
-                        return;
-                    }
+                    while (memlib == null)
+                        try
+                        {
+                            memlib = GetMemoryReader(fp.ProcessId);
+                        }
+                        catch
+                        {
+                            _logger.Error("Failed to open process for memory reading, retrying in 1s");
+                            Thread.Sleep(1000);
+                        }
+
 
                     _logger.Debug("Starting thread to watch memory for changes.");
                     new Thread(() =>
