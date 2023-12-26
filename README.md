@@ -1,23 +1,47 @@
 # Sinden Companion
 
-## Requirements
-- Sinden Windows 2.05beta driver
-- Firmware 1.9
+Sinden Companion is an extension application for the Sinden Lightgun.
 
-Any other combination is **untested**.
+It allows to switch recoil profiles based on the game being played, and to switch profiles dynamically based on memory values.
 
-## Getting started
-- Download the most recent release from the release page
-- Unzip the content in the same folder as Lightgun.exe
-- Start SindenCompanion.exe
-- You may need to add the binary to your antivirus/Microsoft Defender exception list as the included memory reader and DLL injector are identified as threats
+I built it for my own arcade cabinet, but it should work for anyone using the Sinden Lightgun on Windows.
 
 ## Features
 - Executable name and/or Window title recoil profile switching
 - Dynamic recoil profile switching based on memory values
+- Supports manual switching of profiles with the tray icon.
 - Support for Dolphin memory reading
 - Start Lightgun.exe automatically
 - Start automatically at boot
+
+## What's missing
+- Support for dynamically switching input profiles
+  - Have not encountered a game where I need the mouse input but the basis is already implemented
+- Support for dynamically remapping buttons
+    - Same as above
+- Support for string/float/long/double memory values
+    - Not sure if relevant. Though I could see swapping profiles based on a weapon delay between bullets.
+- Support for recoil on events (i.e. recoil when a shot is actually fired)
+    - Could be useful to get properly aware recoil events as opposed to blindly recoiling.
+- Support for more emulators
+    - Model 2
+- More offsets added to the [wiki](https://github.com/sruon/SindenCompanion/wiki/Pointer-paths)!
+
+## Requirements
+- Sinden Windows **2.05beta** driver
+- Firmware **1.9**
+- If using **Dolphin**, the most recent x64 build is likely best. x86 is not supported.
+
+Any other combination is **untested**.
+
+## Getting started
+- Download the most recent release from the [release page](https://github.com/sruon/SindenCompanion/releases)
+- Unzip the content in the same folder as Lightgun.exe
+  - Alternatively, you may unzip it anywhere and set the Lightgun.exe location in the configuration file.
+- Edit the **config.yaml** file to your liking. The bundled configuration contains certain working examples.
+- Start **SindenCompanion.exe**
+- You may need to add the binary to your antivirus/Microsoft Defender exception list as the included memory reader and DLL injector are identified as threats
+
 
 ## Configuration file format
 
@@ -68,15 +92,17 @@ game_profiles:
       match:
     # Setting an exe will match the binary name
         exe: "mygame.exe"
-    # Setting a title will match the window title
+    # Setting a title will match the window title. Partial matches are supported.
     # Setting both will && the match
         title: "My Game"
     # Optional : Set a memory reader to read the game's memory and change profile dynamically
     memscan:
         # Pointer paths to use. First element maps to Player 1, second to Player 2.
+        # For Dolphin, the first element is the 0x8xxxxxxx or 0x9xxxxxxx address within the Wii memory space. Do not add bases
         paths: 
           - mygame.exe+0x0018AC00,0x364,0x4
-        # Type of value to read (byte, short, int, uint)
+          # - "0x80507308,0xa5f" # Dolphin example
+        # Type of value to read (byte, short, int, uint, dolphinbyte)
         type: "byte"
         # Matching values
         match:
@@ -88,16 +114,13 @@ game_profiles:
           0x7: "Single" # Sniper
 ```
 
+The bundled configuration file includes working pointer paths for certain Lightgun titles and **Assault Cube** which may be easier to test.
 
-Launching the application and switching between Notepad and Lightgun.exe should produce recoil events.
+- Download **Assault Cube** ([v1.3.0.2](https://assault.cubers.net/download.html))
+- Switching between weapons should produce recoil profile swaps and recoil tests, if enabled
 
-You may try with Assault Cube v1.3.0.2 to test the memory scan feature.
-
-## Wishlist
-- Support for float/long/double memory values
-- Support for string memory values
-- Support for recoil on events (i.e. recoil when a shot is actually fired)
-- Support for more emulators
+## Support
+Please open an issue on Github for any bug report or feature request. I consider the project to be more or less completed for my needs and will only follow on a best-effort basis.
 
 ## Credits
 - [memory.dll](https://github.com/erfg12/memory.dll/)
