@@ -115,7 +115,7 @@ namespace SindenCompanion
             foreach (var profile in _conf.RecoilProfiles)
             {
                 var item = new ToolStripMenuItem(profile.Name);
-                item.Click += (s, a) => { _callback(-1,profile); };
+                item.Click += (s, a) => { _callback(-1, profile); };
                 changeProfileMenuItem.DropDownItems.Add(item);
             }
         }

@@ -86,7 +86,7 @@ namespace SindenCompanion
             _logger.Debug("[{@PID}][{@ProcName}][{@WindowTitle}]", fp.ProcessId, fp.ProcessName, fp.WindowTitle);
             if (!_clientReady)
             {
-                _logger.Information("Client not ready, ignoring window change");
+                _logger.Information("Sinden drivers not ready, ignoring window change");
                 return;
             }
 
