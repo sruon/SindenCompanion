@@ -35,14 +35,14 @@ namespace SindenCompanion
 
         public void ChangeProfile(int playerIndex, RecoilProfile rp)
         {
-            var rpw = new RecoilProfileWrapper()
+            var rpw = new RecoilProfileWrapper
             {
                 RecoilProfile = rp,
                 Player = playerIndex
             };
-            _server.SendMessage(MessageBuilder.Build("profile", rpw).AsMessage());
+            _server.BuildAndSendMessage("profile", rpw);
             if (_conf.Global.RecoilOnSwitch)
-                _server.SendMessage(MessageBuilder.Build("recoil", playerIndex).AsMessage());
+                _server.BuildAndSendMessage("recoil", playerIndex);
             if (playerIndex == -1)
                 _currentProfile = new List<RecoilProfile> { rp, rp };
             else
@@ -51,7 +51,7 @@ namespace SindenCompanion
 
         public void InjectionNotification()
         {
-            _server.SendMessage(MessageBuilder.Build("serverready", null).AsMessage());
+            _server.BuildAndSendMessage("serverready", null);
         }
 
         private Mem GetMemoryReader(uint processId)
@@ -148,6 +148,10 @@ namespace SindenCompanion
                                             value = memlib.ReadUInt(path);
                                             matchedGp.Memscan.Match.TryGetValue(value, out profName);
                                             break;
+                                        case "dolphinbyte":
+                                            value = memlib.ReadDolphinByte(path);
+                                            matchedGp.Memscan.Match.TryGetValue(value, out profName);
+                                            break;
                                         default:
                                             _logger.Error("Unsupported memory scan type: {@Type}",
                                                 matchedGp.Memscan.Type);
@@ -222,7 +226,7 @@ namespace SindenCompanion
         {
             foreach (var e in from msg in messages
                      where !string.IsNullOrEmpty(msg)
-                     select MessageBuilder.FromMessage(msg))
+                     select MessageBuilder.FromString(msg))
                 switch (e.Type)
                 {
                     case "ready":

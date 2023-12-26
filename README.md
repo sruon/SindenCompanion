@@ -15,6 +15,7 @@ Any other combination is **untested**.
 ## Features
 - Executable name and/or Window title recoil profile switching
 - Dynamic recoil profile switching based on memory values
+- Support for Dolphin memory reading
 - Start Lightgun.exe automatically
 - Start automatically at boot
 
@@ -91,3 +92,15 @@ game_profiles:
 Launching the application and switching between Notepad and Lightgun.exe should produce recoil events.
 
 You may try with Assault Cube v1.3.0.2 to test the memory scan feature.
+
+## Wishlist
+- Support for float/long/double memory values
+- Support for string memory values
+- Support for recoil on events (i.e. recoil when a shot is actually fired)
+- Support for more emulators
+
+## Credits
+- [memory.dll](https://github.com/erfg12/memory.dll/)
+- [ManagedInjector.lib](https://github.com/holly-hacker/ManagedInjector)
+- [Dolphin.Memory.Access](https://github.com/Sewer56/Dolphin.Memory.Access)
+- [dolphin-memory-engine](https://github.com/aldelaro5/dolphin-memory-engine)  

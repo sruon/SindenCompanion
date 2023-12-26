@@ -161,9 +161,9 @@ namespace SindenCompanion
         public bool Matches(ForegroundProcess fp)
         {
             // If both exe and title are set, AND them
-            if (Match.Exe != null && Match.Title != null)
+            if (Match.Exe != null && Match.Title != null && fp.WindowTitle != null)
             {
-                if ($"{fp.ProcessName}.exe" == Match.Exe && Match.Title == fp.WindowTitle) return true;
+                if ($"{fp.ProcessName}.exe" == Match.Exe && fp.WindowTitle.Contains(Match.Title)) return true;
                 return false;
             }
 
@@ -180,11 +180,7 @@ namespace SindenCompanion
         Byte = 1,
         Short = 2,
         Int = 3,
-        UInt = 4,
-        Float = 5,
-        Long = 6,
-        Double = 7,
-        String = 8
+        UInt = 4
     }
 
 
@@ -231,11 +227,8 @@ namespace SindenCompanion
             { "byte", ScanType.Byte },
             { "short", ScanType.Short },
             { "int", ScanType.Int },
-            { "uint", ScanType.UInt }
-            //{"float", ScanType.Float},
-            //{"long", ScanType.Long},
-            //{"double", ScanType.Double},
-            //{"string", ScanType.String},
+            { "uint", ScanType.UInt },
+            { "dolphinbyte", ScanType.Byte }
         };
 
         public string[] Paths { get; set; }
@@ -243,43 +236,4 @@ namespace SindenCompanion
 
         public Dictionary<int, string> Match { get; set; }
     }
-
-    //public class MemMatchContainer<T>
-    //{
-    //    private List<Tuple<T, string>> _matches = new List<Tuple<T, string>>();
-
-    //    private Dictionary<T, string> _matchesDict = new Dictionary<T, string>();
-
-    //    public void Add(T key, string value)
-    //    {
-    //        Type itemType = typeof(T);
-
-    //        if (itemType == typeof(int) || itemType == typeof(short) || itemType == typeof(uint) || itemType == typeof(byte) || itemType == typeof(string))
-    //        {
-    //            _matchesDict.Add(key, value);
-    //        }
-    //        else if (itemType == typeof(double) || itemType == typeof(float) || itemType == typeof(long))
-    //        {
-    //            _matches.Add(new Tuple<T, string>(key, value));
-    //        }
-    //    }
-
-    //    public string GetMatch(T key)
-    //    {
-    //        Type itemType = typeof(T);
-    //        if (itemType == typeof(int) || itemType == typeof(short) || itemType == typeof(uint) || itemType == typeof(byte) || itemType == typeof(string))
-    //        {
-    //            _matchesDict.TryGetValue(key, out string ret);
-    //            return ret;
-    //        }
-    //        //if (itemType == typeof(double) || itemType == typeof(float) || itemType == typeof(long))
-    //        //{
-    //        //    // probably horribly bugged, revisit later
-    //        //    var closest = _matches.OrderBy(v => Math.Abs(Convert.ToDouble(v.Item1) - Convert.ToDouble(key))).First();
-    //        //}
-
-    //        //return null;
-    //        return "";
-    //    }
-    //}
 }

@@ -56,6 +56,11 @@ namespace SindenCompanionShared
             _logger = logger;
         }
 
+        public void BuildAndSendMessage(string type, object payload)
+        {
+            SendMessage(MessageBuilder.Build(type, payload).AsString());
+        }
+
         public void SendMessage(string msg)
         {
             if (_logger != null) _logger.Debug("Sending message {@Message}", msg);

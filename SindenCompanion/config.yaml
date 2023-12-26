@@ -98,3 +98,19 @@ game_profiles:
           0x1: "Single" # Glock
           0x6: "Auto_Fast" # AR
           0x7: "Single" # Sniper
+    - name: "Ghost Squad"
+      profile: "Single"
+      match:
+        exe: "Dolphin.exe"
+        title: "Ghost Squad"
+      memscan:
+        paths:
+         - "0x80507308,0xa5f" #main weapon? 0xa83 is subweapon? other offsets: 80507360 + 95f, 805073b8 + 91f, 80507410 + 5f, 806d3e64 + a5f 
+        type: dolphinbyte
+        match:
+          0x1: "Single" # Single
+          0x2: "Single" # Gun Burst-2
+          0x3: "Auto_Fast" # Burst-3
+          0x4: "Auto_Fast" # Auto
+          0x5: "Single" # Grenade
+          0x0: "Single" # Dead?

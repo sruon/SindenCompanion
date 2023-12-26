@@ -11,7 +11,7 @@ namespace SindenCompanionShared
             return e;
         }
 
-        public static Envelope FromMessage(string message)
+        public static Envelope FromString(string message)
         {
             if (message == null) return null;
             return JsonConvert.DeserializeObject<Envelope>(message);
@@ -31,7 +31,7 @@ namespace SindenCompanionShared
             Type = type;
         }
 
-        public string AsMessage()
+        public string AsString()
         {
             return JsonConvert.SerializeObject(this);
         }

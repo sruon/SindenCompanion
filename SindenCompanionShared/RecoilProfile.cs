@@ -58,10 +58,6 @@ namespace SindenCompanionShared
 
         public int Strength { get; set; }
 
-        public static RecoilProfile FromString(string s)
-        {
-            return JsonConvert.DeserializeObject<RecoilProfile>(s);
-        }
 
         public List<byte[]> AsConfigurationPayload()
         {

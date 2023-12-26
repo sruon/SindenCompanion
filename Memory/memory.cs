@@ -24,11 +24,6 @@ namespace Memory
         /// <param name="FailReason">Show reason open process fails</param>
         public bool OpenProcess(int pid, out string FailReason)
         {
-            /*if (!IsAdmin())
-            {
-                Debug.WriteLine("WARNING: This program may not be running with raised privileges! Visit https://github.com/erfg12/memory.dll/wiki/Administrative-Privileges");
-            }*/
-
             if (pid <= 0)
             {
                 FailReason = "OpenProcess given proc ID 0.";

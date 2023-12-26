@@ -7,9 +7,9 @@ namespace SindenCompanion
 {
     public class ForegroundProcess
     {
+        public readonly Process Process;
         public readonly uint ProcessId;
         public readonly string ProcessName;
-
         public readonly string WindowTitle;
 
         public ForegroundProcess()
@@ -23,6 +23,7 @@ namespace SindenCompanion
             GetWindowThreadProcessId(handle, out ProcessId);
             var process = Process.GetProcessById((int)ProcessId);
             ProcessName = process.ProcessName;
+            Process = process;
         }
 
         [DllImport("user32.dll")]

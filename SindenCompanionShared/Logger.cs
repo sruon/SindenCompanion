@@ -15,19 +15,6 @@ namespace SindenCompanionShared
 
             return Log.Logger;
         }
-
-        public static ILogger CreateLogger(bool toFile, bool debug)
-        {
-            var config = new LoggerConfiguration().WriteTo.Console();
-
-            if (toFile) config = config.WriteTo.File("sc.log");
-
-            if (debug) config = config.MinimumLevel.Debug();
-
-            Log.Logger = config.CreateLogger();
-
-            return Log.Logger;
-        }
     }
 
     public class RemoteSink : ILogEventSink
@@ -43,9 +30,7 @@ namespace SindenCompanionShared
 
         public void Emit(LogEvent logEvent)
         {
-            var message = logEvent.RenderMessage(_formatProvider);
-            var ev = MessageBuilder.Build("log", message);
-            _server.SendMessage(ev.AsMessage());
+            _server.BuildAndSendMessage("log", logEvent.RenderMessage(_formatProvider));
         }
     }
 

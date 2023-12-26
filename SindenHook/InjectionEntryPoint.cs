@@ -39,8 +39,7 @@ namespace SindenHook
                 }
                 catch (Exception ex)
                 {
-                    var ev = MessageBuilder.Build("exception", ex);
-                    _client.SendMessage(ev.AsMessage());
+                    _client.BuildAndSendMessage("exception", ex);
                 }
             }
 
@@ -49,35 +48,28 @@ namespace SindenHook
 
             while (!_isReady)
             {
-                Thread.Sleep(1000);
+                Thread.Sleep(2000);
 
                 try
                 {
                     var type =
                         typeof(Form1).GetField("listLightguns", BindingFlags.NonPublic | BindingFlags.Instance);
-                    if (type != null)
+                    if (type == null) continue;
+
+                    _lightguns = (List<SindenLightgun>)type.GetValue(f1);
+                    if (_lightguns.Count == 0)
                     {
-                        _lightguns = (List<SindenLightgun>)type.GetValue(f1);
-                        _logger.Information("Found list with {@Count} guns", _lightguns.Count);
-                        if (_lightguns.Count == 0)
-                        {
-                            _logger.Information("Waiting for driver to finish initializing guns");
-                            continue;
-                        }
-                    }
-                    else
-                    {
+                        _logger.Information("Waiting for driver to finish initializing guns");
                         continue;
                     }
 
+                    _logger.Information("Found list with {@Count} guns", _lightguns.Count);
                     _isReady = true;
-                    var ev = MessageBuilder.Build("ready", _lightguns);
-                    _client.SendMessage(ev.AsMessage());
+                    _client.BuildAndSendMessage("ready", _lightguns);
                 }
                 catch (Exception ex)
                 {
-                    var ev = MessageBuilder.Build("exception", ex);
-                    _client.SendMessage(ev.AsMessage());
+                    _client.BuildAndSendMessage("exception", ex);
                 }
             }
 
@@ -89,37 +81,30 @@ namespace SindenHook
             foreach (var msg in messages)
                 if (!string.IsNullOrEmpty(msg))
                 {
-                    var e = MessageBuilder.FromMessage(msg);
+                    var e = MessageBuilder.FromString(msg);
                     Envelope ev;
                     switch (e.Type)
                     {
                         case "serverready":
                             if (_lightguns != null && _lightguns.Count > 0)
-                            {
-                                ev = MessageBuilder.Build("ready", _lightguns);
-                                _client.SendMessage(ev.AsMessage());
-                            }
-
+                                _client.BuildAndSendMessage("ready", _lightguns);
                             break;
                         case "ping":
-                            ev = MessageBuilder.Build("pong", null);
-                            _client.SendMessage(ev.AsMessage());
+                            _client.BuildAndSendMessage("pong", null);
                             break;
                         case "report":
-                            ev = MessageBuilder.Build("status", _lightguns);
-                            _client.SendMessage(ev.AsMessage());
+                            _client.BuildAndSendMessage("status", _lightguns);
                             break;
                         case "recoil":
                             var pIndex = Convert.ToInt32(e.Payload);
                             if (_lightguns == null || _lightguns.Count == 0 ||
                                 _lastProfile.ElementAtOrDefault(Math.Max(pIndex, 0)) == null)
                             {
-                                ev = MessageBuilder.Build("recoilack", new RecoilResponse
+                                _client.BuildAndSendMessage("recoilack", new RecoilResponse
                                 {
                                     Reason = "Sinden drivers not yet initialized or no lightguns connected.",
                                     Success = false
                                 });
-                                _client.SendMessage(ev.AsMessage());
                                 break;
                             }
 
@@ -154,33 +139,29 @@ namespace SindenHook
                                 }
                                 else
                                 {
-                                    ev = MessageBuilder.Build("recoilack", new RecoilResponse
+                                    _client.BuildAndSendMessage("recoilack", new RecoilResponse
                                     {
-                                        Reason = $"No lightgun at requested index.",
+                                        Reason = "No lightgun at requested index.",
                                         Success = false
                                     });
-                                    _client.SendMessage(ev.AsMessage());
                                     break;
                                 }
                             }
 
-                            ev = MessageBuilder.Build("recoilack", new RecoilResponse
+                            _client.BuildAndSendMessage("recoilack", new RecoilResponse
                             {
                                 Success = true
                             });
-
-                            _client.SendMessage(ev.AsMessage());
                             break;
                         case "profile":
                             if (_lightguns == null || _lightguns.Count == 0)
                             {
-                                ev = MessageBuilder.Build("profileack",
+                                _client.BuildAndSendMessage("profileack",
                                     new RecoilProfileResponse
                                     {
                                         Success = false,
                                         Reason = "Sinden drivers not yet initialized or no lightguns connected."
                                     });
-                                _client.SendMessage(ev.AsMessage());
                                 break;
                             }
 
@@ -224,9 +205,7 @@ namespace SindenHook
                                     _lastProfile[rpw.Player] = rp;
                             }
 
-                            ev = MessageBuilder.Build("profileack", response);
-
-                            _client.SendMessage(ev.AsMessage());
+                            _client.BuildAndSendMessage("profileack", response);
                             break;
                     }
                 }

@@ -48,4 +48,8 @@
     <None Include="build\**" Pack="True" PackagePath="build\" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <PackageReference Include="System.Memory" Version="4.5.3" />
+	</ItemGroup>
+
 </Project>
