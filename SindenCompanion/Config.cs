@@ -22,21 +22,17 @@ namespace SindenCompanion
             RuleFor(x => x.PulseLength).NotNull().InclusiveBetween(40, 80)
                 .WithMessage(profile =>
                     $"RecoilProfile.{profile.Name}.PulseLength must be between 40 and 80 (inclusive).");
-            ;
             // "Delay Between Pulses (Speed)" 0(Fast)-50(Slow), default value is 10
             RuleFor(x => x.DelayBetweenPulses).NotNull().InclusiveBetween(0, 50)
                 .WithMessage(profile =>
                     $"RecoilProfile.{profile.Name}.DelayBetweenPulses must be between 0 and 50 (inclusive).");
-            ;
             // "Extra Delay After First Pulse" 0-16, default value is 0
             RuleFor(x => x.DelayAfterFirstPulse).NotNull().InclusiveBetween(0, 16)
                 .WithMessage(profile =>
                     $"RecoilProfile.{profile.Name}.DelayAfterFirstPulse must be between 0 and 16 (inclusive).");
-            ;
             // "Recoil Strength (Voltage)" 0(weakest)-10, default value is 10
             RuleFor(x => x.Strength).NotNull().InclusiveBetween(0, 10)
                 .WithMessage(profile => $"RecoilProfile.{profile.Name}.Strength must be between 0 and 10 (inclusive).");
-            ;
         }
 
         private bool UniqueName(Config conf, string name)
@@ -82,19 +78,20 @@ namespace SindenCompanion
             if (_instance != null) return _instance;
             if (_fw == null)
             {
-                _fw = new FileSystemWatcher();
-                _fw.Path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                _fw.Filter = "config.yaml";
+                _fw = new FileSystemWatcher
+                {
+                    Path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
+                    Filter = "config.yaml"
+                };
                 _fw.Changed += new FileSystemEventHandler((e, a) =>
                 {
-                    if (Logger != null) Logger.Information("Detected changes to config file.");
+                    Logger?.Information("Detected changes to config file.");
                     _instance = null;
                 });
                 _fw.EnableRaisingEvents = true;
             }
 
-            if (Logger != null)
-                Logger.Information("Loading configuration.");
+            Logger?.Information("Loading configuration.");
 
             using (var streamReader = new StreamReader(".\\config.yaml", Encoding.UTF8))
             {
@@ -108,20 +105,17 @@ namespace SindenCompanion
                     var result = validator.Validate(_instance);
                     if (!result.IsValid)
                     {
-                        var reason = "";
-                        foreach (var failure in result.Errors)
-                            reason += "Property " + failure.PropertyName + " failed validation. Error was: " +
-                                      failure.ErrorMessage + "\n";
-                        if (Logger != null)
-                            Logger.Error($"Invalid configuration file: {result.Errors.Count} errors: {reason}");
+                        var reason = result.Errors.Aggregate("",
+                            (current, failure) => current + "Property " + failure.PropertyName +
+                                                  " failed validation. Error was: " + failure.ErrorMessage + "\n");
+                        Logger?.Error($"Invalid configuration file: {result.Errors.Count} errors: {reason}");
                         throw new Exception($"Invalid configuration file: {result.Errors.Count} errors: {reason}");
                     }
                 }
                 catch (Exception ex)
                 {
-                    if (Logger != null)
-                        Logger.Error($"Failed to instantiate configuration: {ex}");
-                    throw ex;
+                    Logger?.Error($"Failed to instantiate configuration: {ex}");
+                    throw;
                 }
             }
 
@@ -132,13 +126,8 @@ namespace SindenCompanion
 
     public class Global
     {
-        public Global()
-        {
-            IpcPort = 5557;
-        }
-
         public bool RecoilOnSwitch { get; set; }
-        public int IpcPort { get; set; }
+        public int IpcPort { get; set; } = 5557;
         public string Lightgun { get; set; }
 
         public bool Debug { get; set; }

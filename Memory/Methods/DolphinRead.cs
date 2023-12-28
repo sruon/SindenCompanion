@@ -16,7 +16,7 @@ namespace Memory
         /// <returns></returns>
         public int ReadDolphinByte(string code)
         {
-            if (_dolphin == null) _dolphin = new DolphinEmulationInformation(mProc.Process);
+            if (_dolphin == null) _dolphin = new DolphinEmulationInformation(MProc.Process);
 
             // This re-checks memory pages on every call but not sure how to detect if ROM has changed
             if (!_dolphin.Load())
@@ -35,8 +35,6 @@ namespace Memory
             private const uint Mem1Start = 0x80000000;
             private const uint Mem2Start = 0x90000000;
             private readonly Process _mProc;
-            private bool _aramAccessible;
-            private ulong _emuAramAddressStart;
             private ulong _emuRamAddressStart;
             private bool _mem1Found;
             private ulong _mem2AddressStart;
@@ -59,7 +57,7 @@ namespace Memory
             /// </summary>
             /// <param name="name">label in ini file OR code</param>
             /// <returns></returns>
-            public UIntPtr GetDolphinCode(string name)
+            private UIntPtr GetDolphinCode(string name)
             {
                 // Remove spaces and split the input string by ","
                 var parts = name.Replace(" ", "").Split(',');
@@ -104,11 +102,11 @@ namespace Memory
 
             public unsafe bool Load()
             {
-                Imps.PSAPI_WORKING_SET_EX_INFORMATION[] setInformation;
+                Imps.PsapiWorkingSetExInformation[] setInformation;
                 for (ulong p = 0;
                      Imps.VirtualQueryEx(_mProc.Handle, (IntPtr)p, out var info,
-                         (uint)sizeof(Imps.MEMORY_BASIC_INFORMATION)) ==
-                     sizeof(Imps.MEMORY_BASIC_INFORMATION);
+                         (uint)sizeof(Imps.MemoryBasicInformation)) ==
+                     sizeof(Imps.MemoryBasicInformation);
                      p += (ulong)info.RegionSize)
                     // Check region size so that we know it's MEM2
                     if (!_mem2Present && info.RegionSize == (IntPtr)0x4000000)
@@ -119,24 +117,24 @@ namespace Memory
                             // this size that are too far away. There apparently are other non-MEM2 regions of 64 MiB.
                             break;
                         // View the comment for MEM1.
-                        setInformation = new Imps.PSAPI_WORKING_SET_EX_INFORMATION[1];
+                        setInformation = new Imps.PsapiWorkingSetExInformation[1];
                         setInformation[0].VirtualAddress = info.BaseAddress;
                         if (!Imps.QueryWorkingSetEx(_mProc.Handle, setInformation,
-                                sizeof(Imps.PSAPI_WORKING_SET_EX_INFORMATION))) continue;
+                                sizeof(Imps.PsapiWorkingSetExInformation))) continue;
                         if (!setInformation[0].VirtualAttributes.Valid) continue;
                         _mem2AddressStart = regionBaseAddress;
                         _mem2Present = true;
                     }
-                    else if (info.RegionSize == (IntPtr)0x2000000 && info.lType == Imps.PageType.Mapped)
+                    else if (info.RegionSize == (IntPtr)0x2000000 && info.LType == Imps.PageType.Mapped)
                     {
                         // Here, it's likely the right page, but it can happen that multiple pages with these criteria
                         // exists and have nothing to do with the emulated memory. Only the right page has valid
                         // working set information so an additional check is required that it is backed by physical
                         // memory.
-                        setInformation = new Imps.PSAPI_WORKING_SET_EX_INFORMATION[1];
+                        setInformation = new Imps.PsapiWorkingSetExInformation[1];
                         setInformation[0].VirtualAddress = info.BaseAddress;
                         if (!Imps.QueryWorkingSetEx(_mProc.Handle, setInformation,
-                                sizeof(Imps.PSAPI_WORKING_SET_EX_INFORMATION))) continue;
+                                sizeof(Imps.PsapiWorkingSetExInformation))) continue;
                         if (!setInformation[0].VirtualAttributes.Valid) continue;
                         if (!_mem1Found)
                         {
@@ -160,6 +158,10 @@ namespace Memory
                 // Here, Dolphin is running, but the emulation hasn't started
                 return _emuRamAddressStart != 0;
             }
+#pragma warning disable CS0414 // Field is assigned but its value is never used
+            private bool _aramAccessible;
+            private ulong _emuAramAddressStart;
+#pragma warning restore CS0414 // Field is assigned but its value is never used
         }
     }
 }

@@ -19,7 +19,7 @@ namespace Memory
             if (theCode == UIntPtr.Zero || theCode.ToUInt64() < 0x10000)
                 return null;
 
-            if (!ReadProcessMemory(mProc.Handle, theCode, memory, (UIntPtr)length, IntPtr.Zero))
+            if (!ReadProcessMemory(MProc.Handle, theCode, memory, (UIntPtr)length, IntPtr.Zero))
                 return null;
 
             return memory;
@@ -41,7 +41,7 @@ namespace Memory
 
             try
             {
-                if (ReadProcessMemory(mProc.Handle, theCode, memory, (UIntPtr)4, IntPtr.Zero))
+                if (ReadProcessMemory(MProc.Handle, theCode, memory, (UIntPtr)4, IntPtr.Zero))
                 {
                     var address = BitConverter.ToSingle(memory, 0);
                     var returnValue = (float)address;
@@ -79,7 +79,7 @@ namespace Memory
             if (theCode == UIntPtr.Zero || theCode.ToUInt64() < 0x10000)
                 return "";
 
-            if (ReadProcessMemory(mProc.Handle, theCode, memoryNormal, (UIntPtr)length, IntPtr.Zero))
+            if (ReadProcessMemory(MProc.Handle, theCode, memoryNormal, (UIntPtr)length, IntPtr.Zero))
                 return zeroTerminated
                     ? stringEncoding.GetString(memoryNormal).Split('\0')[0]
                     : stringEncoding.GetString(memoryNormal);
@@ -103,7 +103,7 @@ namespace Memory
 
             try
             {
-                if (ReadProcessMemory(mProc.Handle, theCode, memory, (UIntPtr)8, IntPtr.Zero))
+                if (ReadProcessMemory(MProc.Handle, theCode, memory, (UIntPtr)8, IntPtr.Zero))
                 {
                     var address = BitConverter.ToDouble(memory, 0);
                     var returnValue = (double)address;
@@ -135,7 +135,7 @@ namespace Memory
             if (theCode == UIntPtr.Zero || theCode.ToUInt64() < 0x10000)
                 return 0;
 
-            if (ReadProcessMemory(mProc.Handle, theCode, memory, (UIntPtr)4, IntPtr.Zero))
+            if (ReadProcessMemory(MProc.Handle, theCode, memory, (UIntPtr)4, IntPtr.Zero))
                 return BitConverter.ToInt32(memory, 0);
             else
                 return 0;
@@ -151,10 +151,10 @@ namespace Memory
             var memory = new byte[16];
             var theCode = GetCode(code);
 
-            if (theCode == null || theCode == UIntPtr.Zero || theCode.ToUInt64() < 0x10000)
+            if (theCode == UIntPtr.Zero || theCode.ToUInt64() < 0x10000)
                 return 0;
 
-            if (ReadProcessMemory(mProc.Handle, theCode, memory, (UIntPtr)8, IntPtr.Zero))
+            if (ReadProcessMemory(MProc.Handle, theCode, memory, (UIntPtr)8, IntPtr.Zero))
                 return BitConverter.ToInt64(memory, 0);
             else
                 return 0;
@@ -169,10 +169,10 @@ namespace Memory
         {
             var memory = new byte[4];
             var theCode = GetCode(code);
-            if (theCode == null || theCode == UIntPtr.Zero || theCode.ToUInt64() < 0x10000)
+            if (theCode == UIntPtr.Zero || theCode.ToUInt64() < 0x10000)
                 return 0;
 
-            if (ReadProcessMemory(mProc.Handle, theCode, memory, (UIntPtr)4, IntPtr.Zero))
+            if (ReadProcessMemory(MProc.Handle, theCode, memory, (UIntPtr)4, IntPtr.Zero))
                 return BitConverter.ToUInt32(memory, 0);
             else
                 return 0;
@@ -192,7 +192,7 @@ namespace Memory
             if (theCode == UIntPtr.Zero || theCode.ToUInt64() < 0x10000)
                 return 0;
 
-            if (ReadProcessMemory(mProc.Handle, theCode, memoryTiny, (UIntPtr)2, IntPtr.Zero))
+            if (ReadProcessMemory(MProc.Handle, theCode, memoryTiny, (UIntPtr)2, IntPtr.Zero))
                 return BitConverter.ToInt32(memoryTiny, 0);
             else
                 return 0;
@@ -211,7 +211,7 @@ namespace Memory
             if (theCode == UIntPtr.Zero || theCode.ToUInt64() < 0x10000)
                 return 0;
 
-            if (ReadProcessMemory(mProc.Handle, theCode, memoryTiny, (UIntPtr)1, IntPtr.Zero))
+            if (ReadProcessMemory(MProc.Handle, theCode, memoryTiny, (UIntPtr)1, IntPtr.Zero))
                 return memoryTiny[0];
 
             return 0;
@@ -220,37 +220,37 @@ namespace Memory
 
         public T ReadMemory<T>(string address)
         {
-            object ReadOutput = null;
+            object readOutput = null;
 
             switch (Type.GetTypeCode(typeof(T)))
             {
                 case TypeCode.String:
-                    ReadOutput = ReadString(address);
+                    readOutput = ReadString(address);
                     break;
                 case TypeCode.Int32:
-                    ReadOutput = ReadInt(address);
+                    readOutput = ReadInt(address);
                     break;
                 case TypeCode.Int64:
-                    ReadOutput = ReadLong(address);
+                    readOutput = ReadLong(address);
                     break;
                 case TypeCode.Byte:
-                    ReadOutput = ReadByte(address);
+                    readOutput = ReadByte(address);
                     break;
                 case TypeCode.Double:
-                    ReadOutput = ReadDouble(address);
+                    readOutput = ReadDouble(address);
                     break;
                 case TypeCode.Decimal:
-                    ReadOutput = ReadFloat(address);
+                    readOutput = ReadFloat(address);
                     break;
                 case TypeCode.UInt32:
-                    ReadOutput = ReadUInt(address);
+                    readOutput = ReadUInt(address);
                     break;
                 default:
                     break;
             }
 
-            if (ReadOutput != null)
-                return (T)Convert.ChangeType(ReadOutput, typeof(T));
+            if (readOutput != null)
+                return (T)Convert.ChangeType(readOutput, typeof(T));
             else
                 return default;
         }

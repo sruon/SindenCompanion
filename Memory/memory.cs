@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
+using static System.String;
 using static Memory.Imps;
 
 namespace Memory
@@ -14,42 +15,42 @@ namespace Memory
     /// </summary>
     public partial class Mem
     {
-        public Proc mProc = new Proc();
+        public Proc MProc = new Proc();
 
         /// <summary>
         /// Open the PC game process with all security and access rights.
         /// </summary>
         /// <param name="pid">Use process name or process ID here.</param>
         /// <returns>Process opened successfully or failed.</returns>
-        /// <param name="FailReason">Show reason open process fails</param>
-        public bool OpenProcess(int pid, out string FailReason)
+        /// <param name="failReason">Show reason open process fails</param>
+        public bool OpenProcess(int pid, out string failReason)
         {
             if (pid <= 0)
             {
-                FailReason = "OpenProcess given proc ID 0.";
+                failReason = "OpenProcess given proc ID 0.";
                 Debug.WriteLine("ERROR: OpenProcess given proc ID 0.");
                 return false;
             }
 
 
-            if (mProc.Process != null && mProc.Process.Id == pid)
+            if (MProc.Process != null && MProc.Process.Id == pid)
             {
-                FailReason = "mProc.Process is null";
+                failReason = "mProc.Process is null";
                 return true;
             }
 
             try
             {
-                mProc.Process = Process.GetProcessById(pid);
+                MProc.Process = Process.GetProcessById(pid);
 
-                if (mProc.Process != null && !mProc.Process.Responding)
+                if (MProc.Process != null && !MProc.Process.Responding)
                 {
                     Debug.WriteLine("ERROR: OpenProcess: Process is not responding or null.");
-                    FailReason = "Process is not responding or null.";
+                    failReason = "Process is not responding or null.";
                     return false;
                 }
 
-                mProc.Handle = Imps.OpenProcess(0x1F0FFF, true, pid);
+                MProc.Handle = Imps.OpenProcess(0x1F0FFF, true, pid);
 
                 try
                 {
@@ -60,34 +61,34 @@ namespace Memory
                     //Debug.WriteLine("WARNING: You are not running with raised privileges! Visit https://github.com/erfg12/memory.dll/wiki/Administrative-Privileges"); 
                 }
 
-                if (mProc.Handle == IntPtr.Zero)
+                if (MProc.Handle == IntPtr.Zero)
                 {
                     var eCode = Marshal.GetLastWin32Error();
                     Debug.WriteLine(
                         "ERROR: OpenProcess has failed opening a handle to the target process (GetLastWin32ErrorCode: " +
                         eCode + ")");
                     Process.LeaveDebugMode();
-                    mProc = null;
-                    FailReason = "failed opening a handle to the target process(GetLastWin32ErrorCode: " + eCode + ")";
+                    MProc = null;
+                    failReason = "failed opening a handle to the target process(GetLastWin32ErrorCode: " + eCode + ")";
                     return false;
                 }
 
                 // Lets set the process to 64bit or not here (cuts down on api calls)
-                mProc.Is64Bit = Environment.Is64BitOperatingSystem && IsWow64Process(mProc.Handle, out var retVal) &&
+                MProc.Is64Bit = Environment.Is64BitOperatingSystem && IsWow64Process(MProc.Handle, out var retVal) &&
                                 !retVal;
 
-                mProc.MainModule = mProc.Process.MainModule;
+                MProc.MainModule = MProc.Process.MainModule;
 
                 //GetModules();
 
-                Debug.WriteLine("Process #" + mProc.Process + " is now open.");
-                FailReason = "";
+                Debug.WriteLine("Process #" + MProc.Process + " is now open.");
+                failReason = "";
                 return true;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine("ERROR: OpenProcess has crashed. " + ex);
-                FailReason = "OpenProcess has crashed. " + ex;
+                failReason = "OpenProcess has crashed. " + ex;
                 return false;
             }
         }
@@ -102,24 +103,24 @@ namespace Memory
         public UIntPtr GetCode(string name, int size = 8)
         {
             var theCode = name;
-            if (mProc == null)
+            if (MProc == null)
                 return UIntPtr.Zero;
 
-            if (mProc.Is64Bit)
+            if (MProc.Is64Bit)
             {
                 //Debug.WriteLine("Changing to 64bit code...");
                 if (size == 8) size = 16; //change to 64bit
                 return Get64BitCode(name, size); //jump over to 64bit code grab
             }
 
-            if (string.IsNullOrEmpty(theCode))
+            if (IsNullOrEmpty(theCode))
                 //Debug.WriteLine("ERROR: LoadCode returned blank. NAME:" + name + " PATH:" + path);
                 return UIntPtr.Zero;
 
 
             // remove spaces
             if (theCode.Contains(" "))
-                theCode = theCode.Replace(" ", string.Empty);
+                theCode = theCode.Replace(" ", Empty);
 
             if (!theCode.Contains("+") && !theCode.Contains(","))
                 try
@@ -148,7 +149,7 @@ namespace Memory
                 {
                     var test = oldOffsets;
                     if (oldOffsets.Contains("0x")) test = oldOffsets.Replace("0x", "");
-                    var preParse = 0;
+                    int preParse;
                     if (!oldOffsets.Contains("-"))
                     {
                         preParse = int.Parse(test, NumberStyles.AllowHexSpecifier);
@@ -157,7 +158,7 @@ namespace Memory
                     {
                         test = test.Replace("-", "");
                         preParse = int.Parse(test, NumberStyles.AllowHexSpecifier);
-                        preParse = preParse * -1;
+                        preParse *= -1;
                     }
 
                     offsetsList.Add(preParse);
@@ -167,7 +168,7 @@ namespace Memory
 
                 if (theCode.Contains("base") || theCode.Contains("main"))
                 {
-                    ReadProcessMemory(mProc.Handle, (UIntPtr)((int)mProc.MainModule.BaseAddress + offsets[0]),
+                    ReadProcessMemory(MProc.Handle, (UIntPtr)((int)MProc.MainModule.BaseAddress + offsets[0]),
                         memoryAddress, (UIntPtr)size, IntPtr.Zero);
                 }
                 else if (!theCode.Contains("base") && !theCode.Contains("main") && theCode.Contains("+"))
@@ -194,12 +195,12 @@ namespace Memory
                         }
                     }
 
-                    ReadProcessMemory(mProc.Handle, (UIntPtr)((int)altModule + offsets[0]), memoryAddress,
+                    ReadProcessMemory(MProc.Handle, (UIntPtr)((int)altModule + offsets[0]), memoryAddress,
                         (UIntPtr)size, IntPtr.Zero);
                 }
                 else
                 {
-                    ReadProcessMemory(mProc.Handle, (UIntPtr)offsets[0], memoryAddress, (UIntPtr)size, IntPtr.Zero);
+                    ReadProcessMemory(MProc.Handle, (UIntPtr)offsets[0], memoryAddress, (UIntPtr)size, IntPtr.Zero);
                 }
 
                 var num1 = BitConverter.ToUInt32(memoryAddress, 0); //ToUInt64 causes arithmetic overflow.
@@ -209,7 +210,7 @@ namespace Memory
                 for (var i = 1; i < offsets.Length; i++)
                 {
                     base1 = new UIntPtr(Convert.ToUInt32(num1 + offsets[i]));
-                    ReadProcessMemory(mProc.Handle, base1, memoryAddress, (UIntPtr)size, IntPtr.Zero);
+                    ReadProcessMemory(MProc.Handle, base1, memoryAddress, (UIntPtr)size, IntPtr.Zero);
                     num1 = BitConverter.ToUInt32(memoryAddress, 0); //ToUInt64 causes arithmetic overflow.
                 }
 
@@ -222,7 +223,7 @@ namespace Memory
                 //Debug.WriteLine("newOffsets=" + newOffsets);
                 if (theCode.ToLower().Contains("base") || theCode.ToLower().Contains("main"))
                 {
-                    altModule = mProc.MainModule.BaseAddress;
+                    altModule = MProc.MainModule.BaseAddress;
                 }
                 else if (!theCode.ToLower().Contains("base") && !theCode.ToLower().Contains("main") &&
                          theCode.Contains("+"))
@@ -264,8 +265,12 @@ namespace Memory
         /// <returns></returns>
         public IntPtr GetModuleAddressByName(string name)
         {
-            return mProc.Process.Modules.Cast<ProcessModule>()
-                .SingleOrDefault(m => string.Equals(m.ModuleName, name, StringComparison.OrdinalIgnoreCase))
+            return MProc.Process.Modules.Cast<ProcessModule>()
+                .SingleOrDefault(m =>
+                {
+                    if (m == null) throw new ArgumentNullException(nameof(m));
+                    return string.Equals(m.ModuleName, name, StringComparison.OrdinalIgnoreCase);
+                })
                 .BaseAddress;
         }
 
@@ -279,12 +284,12 @@ namespace Memory
         {
             var theCode = name;
 
-            if (string.IsNullOrEmpty(theCode))
+            if (IsNullOrEmpty(theCode))
                 return UIntPtr.Zero;
 
             // remove spaces
             if (theCode.Contains(" "))
-                theCode.Replace(" ", string.Empty);
+                theCode.Replace(" ", Empty);
 
             var newOffsets = theCode;
             if (theCode.Contains("+"))
@@ -331,7 +336,7 @@ namespace Memory
 
                 if (theCode.Contains("base") || theCode.Contains("main"))
                 {
-                    ReadProcessMemory(mProc.Handle, (UIntPtr)((long)mProc.MainModule.BaseAddress + offsets[0]),
+                    ReadProcessMemory(MProc.Handle, (UIntPtr)((long)MProc.MainModule.BaseAddress + offsets[0]),
                         memoryAddress, (UIntPtr)size, IntPtr.Zero);
                 }
                 else if (!theCode.Contains("base") && !theCode.Contains("main") && theCode.Contains("+"))
@@ -352,12 +357,12 @@ namespace Memory
                             //Debug.WriteLine("Modules: " + string.Join(",", mProc.Modules));
                         }
 
-                    ReadProcessMemory(mProc.Handle, (UIntPtr)((long)altModule + offsets[0]), memoryAddress,
+                    ReadProcessMemory(MProc.Handle, (UIntPtr)((long)altModule + offsets[0]), memoryAddress,
                         (UIntPtr)size, IntPtr.Zero);
                 }
                 else // no offsets
                 {
-                    ReadProcessMemory(mProc.Handle, (UIntPtr)offsets[0], memoryAddress, (UIntPtr)size, IntPtr.Zero);
+                    ReadProcessMemory(MProc.Handle, (UIntPtr)offsets[0], memoryAddress, (UIntPtr)size, IntPtr.Zero);
                 }
 
                 var num1 = BitConverter.ToInt64(memoryAddress, 0);
@@ -367,7 +372,7 @@ namespace Memory
                 for (var i = 1; i < offsets.Length; i++)
                 {
                     base1 = new UIntPtr(Convert.ToUInt64(num1 + offsets[i]));
-                    ReadProcessMemory(mProc.Handle, base1, memoryAddress, (UIntPtr)size, IntPtr.Zero);
+                    ReadProcessMemory(MProc.Handle, base1, memoryAddress, (UIntPtr)size, IntPtr.Zero);
                     num1 = BitConverter.ToInt64(memoryAddress, 0);
                 }
 
@@ -379,7 +384,7 @@ namespace Memory
                 var altModule = IntPtr.Zero;
                 if (theCode.Contains("base") || theCode.Contains("main"))
                 {
-                    altModule = mProc.MainModule.BaseAddress;
+                    altModule = MProc.MainModule.BaseAddress;
                 }
                 else if (!theCode.Contains("base") && !theCode.Contains("main") && theCode.Contains("+"))
                 {
@@ -418,11 +423,8 @@ namespace Memory
         /// </summary>
         public void CloseProcess()
         {
-            if (mProc.Handle == null)
-                return;
-
-            CloseHandle(mProc.Handle);
-            mProc = null;
+            CloseHandle(MProc.Handle);
+            MProc = null;
         }
     }
 }

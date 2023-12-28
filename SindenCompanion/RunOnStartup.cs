@@ -30,17 +30,18 @@ namespace SindenCompanion
             try
             {
                 rk = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
-                rk.SetValue(AppTitle, AppPath);
+                rk?.SetValue(AppTitle, AppPath);
                 return true;
             }
             catch (Exception)
             {
+                // ignored
             }
 
             try
             {
                 rk = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
-                rk.SetValue(AppTitle, AppPath);
+                rk?.SetValue(AppTitle, AppPath);
             }
             catch (Exception)
             {
@@ -58,14 +59,6 @@ namespace SindenCompanion
             return RemoveFromStartup(Application.ProductName, Application.ExecutablePath);
         }
 
-        /// <summary>
-        /// Removes the specified executable from the startup list.
-        /// </summary>
-        /// <param name="AppTitle">Registry key title.</param>
-        public static bool RemoveFromStartup(string AppTitle)
-        {
-            return RemoveFromStartup(AppTitle, null);
-        }
 
         /// <summary>
         /// Removes the specified executable from the startup list.
@@ -137,12 +130,9 @@ namespace SindenCompanion
             {
                 rk = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
                 value = rk.GetValue(AppTitle).ToString();
-                if (value == null)
+                if (!value.ToLower().Equals(AppPath.ToLower()))
                     return false;
-                else if (!value.ToLower().Equals(AppPath.ToLower()))
-                    return false;
-                else
-                    return true;
+                return true;
             }
             catch (Exception)
             {
@@ -154,13 +144,11 @@ namespace SindenCompanion
                 value = rk.GetValue(AppTitle)?.ToString();
                 if (value == null)
                     return false;
-                else if (!value.ToLower().Equals(AppPath.ToLower()))
-                    return false;
-                else
-                    return true;
+                return value.ToLower().Equals(AppPath.ToLower());
             }
             catch (Exception)
             {
+                // ignored
             }
 
             return false;

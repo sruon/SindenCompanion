@@ -15,7 +15,7 @@ namespace SindenCompanion
         private readonly ILogger _logger;
         private readonly Dictionary<uint, Mem> _memReaders;
         private readonly ServerInterface _server;
-        private bool _clientReady = false;
+        private bool _clientReady;
         private Config _conf;
         private List<RecoilProfile> _currentProfile = new List<RecoilProfile> { null, null };
 
@@ -56,10 +56,9 @@ namespace SindenCompanion
 
         private Mem GetMemoryReader(uint processId)
         {
-            Mem memlib;
-            if (_memReaders.TryGetValue(processId, out memlib))
+            if (_memReaders.TryGetValue(processId, out var memlib))
             {
-                if (memlib.mProc.MainModule == null) _memReaders[processId] = null;
+                if (memlib.MProc.MainModule == null) _memReaders[processId] = null;
                 return memlib;
             }
 
@@ -70,11 +69,9 @@ namespace SindenCompanion
                 _logger.Error("Failed to open process for memory reading: {@failReason}", failReason);
                 throw new Exception("Failed to open process for memory reading");
             }
-            else
-            {
-                _logger.Information("Successfully opened process for memory reading");
-                memlib = _memReaders[processId];
-            }
+
+            _logger.Information("Successfully opened process for memory reading");
+            memlib = _memReaders[processId];
 
             return memlib;
         }
@@ -92,133 +89,129 @@ namespace SindenCompanion
 
             _conf = Config.GetInstance();
             var matchedGp = _conf.GameProfiles.FirstOrDefault(x => x.Matches(fp));
-            if (matchedGp != null)
+            if (matchedGp == null) return;
+            RecoilProfile matchedRp = null;
+            if (matchedGp.Memscan != null) // Continuous swap based on memory
             {
-                RecoilProfile matchedRp = null;
-                if (matchedGp.Memscan != null) // Continuous swap based on memory
-                {
-                    Mem memlib = null;
+                Mem memlib = null;
 
-                    while (memlib == null)
-                        try
-                        {
-                            memlib = GetMemoryReader(fp.ProcessId);
-                        }
-                        catch
-                        {
-                            _logger.Error("Failed to open process for memory reading, retrying in 1s");
-                            Thread.Sleep(1000);
-                        }
-
-
-                    _logger.Debug("Starting thread to watch memory for changes.");
-                    new Thread(() =>
+                while (memlib == null)
+                    try
                     {
-                        while (true)
+                        memlib = GetMemoryReader(fp.ProcessId);
+                    }
+                    catch
+                    {
+                        _logger.Error("Failed to open process for memory reading, retrying in 1s");
+                        Thread.Sleep(1000);
+                    }
+
+
+                _logger.Debug("Starting thread to watch memory for changes.");
+                new Thread(() =>
+                {
+                    while (true)
+                    {
+                        var newFp = new ForegroundProcess();
+                        if (newFp.ProcessId != fp.ProcessId)
                         {
-                            var newFp = new ForegroundProcess();
-                            if (newFp.ProcessId != fp.ProcessId)
+                            _logger.Information("Detected window swap during memory scan, terminating thread.");
+                            return;
+                        }
+
+                        var idx = 0;
+                        foreach (var path in matchedGp.Memscan.Paths)
+                        {
+                            dynamic value;
+                            string profName = null;
+                            try
                             {
-                                _logger.Information("Detected window swap during memory scan, terminating thread.");
-                                return;
+                                switch (matchedGp.Memscan.Type)
+                                {
+                                    case "byte":
+                                        value = memlib.ReadByte(path);
+                                        matchedGp.Memscan.Match.TryGetValue(value, out profName);
+                                        break;
+                                    case "short":
+                                        value = memlib.Read2Byte(path);
+                                        matchedGp.Memscan.Match.TryGetValue(value, out profName);
+                                        break;
+                                    case "int":
+                                        value = memlib.ReadInt(path);
+                                        matchedGp.Memscan.Match.TryGetValue(value, out profName);
+                                        break;
+                                    case "uint":
+                                        value = memlib.ReadUInt(path);
+                                        matchedGp.Memscan.Match.TryGetValue(value, out profName);
+                                        break;
+                                    case "dolphinbyte":
+                                        value = memlib.ReadDolphinByte(path);
+                                        matchedGp.Memscan.Match.TryGetValue(value, out profName);
+                                        break;
+                                    default:
+                                        _logger.Error("Unsupported memory scan type: {@Type}",
+                                            matchedGp.Memscan.Type);
+                                        return;
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                _logger.Error(e,
+                                    "[P{@Index}] Exception while reading memory. The application may still be initializing or the pointer path is incorrect: {@Exception}",
+                                    idx + 1, e);
+                                continue;
                             }
 
-                            var idx = 0;
-                            foreach (var path in matchedGp.Memscan.Paths)
+                            _logger.Debug("[P{@Index}] Memory scan result: {@Value} -> {@Profile}", idx + 1, value,
+                                profName);
+                            if (!string.IsNullOrEmpty(profName))
                             {
-                                dynamic value;
-                                string profName = null;
-                                try
-                                {
-                                    switch (matchedGp.Memscan.Type)
-                                    {
-                                        case "byte":
-                                            value = memlib.ReadByte(path);
-                                            matchedGp.Memscan.Match.TryGetValue(value, out profName);
-                                            break;
-                                        case "short":
-                                            value = memlib.Read2Byte(path);
-                                            matchedGp.Memscan.Match.TryGetValue(value, out profName);
-                                            break;
-                                        case "int":
-                                            value = memlib.ReadInt(path);
-                                            matchedGp.Memscan.Match.TryGetValue(value, out profName);
-                                            break;
-                                        case "uint":
-                                            value = memlib.ReadUInt(path);
-                                            matchedGp.Memscan.Match.TryGetValue(value, out profName);
-                                            break;
-                                        case "dolphinbyte":
-                                            value = memlib.ReadDolphinByte(path);
-                                            matchedGp.Memscan.Match.TryGetValue(value, out profName);
-                                            break;
-                                        default:
-                                            _logger.Error("Unsupported memory scan type: {@Type}",
-                                                matchedGp.Memscan.Type);
-                                            return;
-                                    }
-                                }
-                                catch (Exception e)
-                                {
-                                    _logger.Error(e,
-                                        "[P{@Index}] Exception while reading memory. The application may still be initializing or the pointer path is incorrect: {@Exception}",
-                                        idx + 1, e);
-                                    continue;
-                                }
-
-                                _logger.Debug("[P{@Index}] Memory scan result: {@Value} -> {@Profile}", idx + 1, value,
-                                    profName);
-                                if (!string.IsNullOrEmpty(profName))
-                                {
-                                    matchedRp = _conf.RecoilProfiles.FirstOrDefault(p => p.Name == profName);
-                                    if (matchedRp == null)
-                                    {
-                                        _logger.Error(
-                                            "[{@Game}][MEM][Player {@Index}] {@Value} -> {@Profile} not found. Check your configuration.",
-                                            matchedGp.Name, idx + 1, value, profName);
-                                        continue;
-                                    }
-                                }
-                                else
+                                matchedRp = _conf.RecoilProfiles.FirstOrDefault(p => p.Name == profName);
+                                if (matchedRp == null)
                                 {
                                     _logger.Error(
-                                        "[{@Game}][MEM][Player {@Index}] {@Value} -> No profile found. Check your configuration.",
-                                        matchedGp.Name, idx + 1, value);
+                                        "[{@Game}][MEM][Player {@Index}] {@Value} -> {@Profile} not found. Check your configuration.",
+                                        matchedGp.Name, idx + 1, value, profName);
                                     continue;
                                 }
-
-                                if (matchedRp != _currentProfile[idx])
-                                {
-                                    _logger.Information("[{@Game}][MEM][Player {@Index}] {@Value} -> {@Profile}",
-                                        matchedGp.Name, idx + 1, value,
-                                        matchedRp.Name);
-                                    ChangeProfile(idx, matchedRp);
-                                }
-
-                                idx++;
+                            }
+                            else
+                            {
+                                _logger.Error(
+                                    "[{@Game}][MEM][Player {@Index}] {@Value} -> No profile found. Check your configuration.",
+                                    matchedGp.Name, idx + 1, value);
+                                continue;
                             }
 
+                            if (matchedRp != _currentProfile[idx])
+                            {
+                                _logger.Information("[{@Game}][MEM][Player {@Index}] {@Value} -> {@Profile}",
+                                    matchedGp.Name, idx + 1, value,
+                                    matchedRp.Name);
+                                ChangeProfile(idx, matchedRp);
+                            }
 
-                            Thread.Sleep(100);
+                            idx++;
                         }
-                    }).Start();
-                }
-                else // Single profile swap
-                {
-                    matchedRp = _conf.RecoilProfiles.FirstOrDefault(p => p.Name == matchedGp.Profile);
-                    if (matchedRp == null)
-                    {
-                        _logger.Error("Could not find any profile named {@Profile}. Check your configuration.",
-                            matchedGp.Profile);
-                        return;
-                    }
 
-                    if (matchedRp != _currentProfile[0])
-                    {
-                        _logger.Information("[{@Game}] {@Profile}", matchedGp.Name, matchedRp.Name);
-                        ChangeProfile(-1, matchedRp);
+
+                        Thread.Sleep(100);
                     }
+                }).Start();
+            }
+            else // Single profile swap
+            {
+                matchedRp = _conf.RecoilProfiles.FirstOrDefault(p => p.Name == matchedGp.Profile);
+                if (matchedRp == null)
+                {
+                    _logger.Error("Could not find any profile named {@Profile}. Check your configuration.",
+                        matchedGp.Profile);
+                    return;
                 }
+
+                if (matchedRp == _currentProfile[0]) return;
+                _logger.Information("[{@Game}] {@Profile}", matchedGp.Name, matchedRp.Name);
+                ChangeProfile(-1, matchedRp);
             }
         }
 

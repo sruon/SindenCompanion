@@ -82,49 +82,49 @@ namespace Memory
         public enum ProcessorArchitecture : ushort
         {
             /// <summary>x86</summary>
-            PROCESSOR_ARCHITECTURE_INTEL = 0,
+            ProcessorArchitectureIntel = 0,
 
             /// <summary>Unspecified</summary>
-            PROCESSOR_ARCHITECTURE_MIPS = 1,
+            ProcessorArchitectureMips = 1,
 
             /// <summary>Unspecified</summary>
-            PROCESSOR_ARCHITECTURE_ALPHA = 2,
+            ProcessorArchitectureAlpha = 2,
 
             /// <summary>Unspecified</summary>
-            PROCESSOR_ARCHITECTURE_PPC = 3,
+            ProcessorArchitecturePpc = 3,
 
             /// <summary>Unspecified</summary>
-            PROCESSOR_ARCHITECTURE_SHX = 4,
+            ProcessorArchitectureShx = 4,
 
             /// <summary>ARM</summary>
-            PROCESSOR_ARCHITECTURE_ARM = 5,
+            ProcessorArchitectureArm = 5,
 
             /// <summary>Intel Itanium-based</summary>
-            PROCESSOR_ARCHITECTURE_IA64 = 6,
+            ProcessorArchitectureIa64 = 6,
 
             /// <summary>Unspecified</summary>
-            PROCESSOR_ARCHITECTURE_ALPHA64 = 7,
+            ProcessorArchitectureAlpha64 = 7,
 
             /// <summary>Unspecified</summary>
-            PROCESSOR_ARCHITECTURE_MSIL = 8,
+            ProcessorArchitectureMsil = 8,
 
             /// <summary>x64 (AMD or Intel)</summary>
-            PROCESSOR_ARCHITECTURE_AMD64 = 9,
+            ProcessorArchitectureAmd64 = 9,
 
             /// <summary>Unspecified</summary>
-            PROCESSOR_ARCHITECTURE_IA32_ON_WIN64 = 10, // 0x000A
+            ProcessorArchitectureIa32OnWin64 = 10, // 0x000A
 
             /// <summary>Unspecified</summary>
-            PROCESSOR_ARCHITECTURE_NEUTRAL = 11, // 0x000B
+            ProcessorArchitectureNeutral = 11, // 0x000B
 
             /// <summary>Unspecified</summary>
-            PROCESSOR_ARCHITECTURE_ARM64 = 12, // 0x000C
+            ProcessorArchitectureArm64 = 12, // 0x000C
 
             /// <summary>Unspecified</summary>
-            PROCESSOR_ARCHITECTURE_ARM32_ON_WIN64 = 13, // 0x000D
+            ProcessorArchitectureArm32OnWin64 = 13, // 0x000D
 
             /// <summary>Unknown architecture.</summary>
-            PROCESSOR_ARCHITECTURE_UNKNOWN = 65535 // 0xFFFF
+            ProcessorArchitectureUnknown = 65535 // 0xFFFF
         }
 
         [DllImport("kernel32.dll")]
@@ -169,12 +169,12 @@ namespace Memory
         [SuppressUnmanagedCodeSecurity]
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern int VirtualQueryEx(IntPtr hProcess, IntPtr lpAddress,
-            out MEMORY_BASIC_INFORMATION lpBuffer, uint dwLength);
+            out MemoryBasicInformation lpBuffer, uint dwLength);
 
         [SuppressUnmanagedCodeSecurity]
         [DllImport("psapi", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool QueryWorkingSetEx(IntPtr hProcess, [In] [Out] PSAPI_WORKING_SET_EX_INFORMATION[] pv,
+        public static extern bool QueryWorkingSetEx(IntPtr hProcess, [In] [Out] PsapiWorkingSetExInformation[] pv,
             int cb);
 
 
@@ -186,18 +186,18 @@ namespace Memory
         /// <returns>This function does not return a value.</returns>
         [SuppressUnmanagedCodeSecurity]
         [DllImport("kernel32.dll")]
-        public static extern void GetSystemInfo(out SYSTEM_INFO lpSystemInfo);
+        public static extern void GetSystemInfo(out SystemInfo lpSystemInfo);
 
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct PSAPI_WORKING_SET_EX_INFORMATION
+        public struct PsapiWorkingSetExInformation
         {
             public IntPtr VirtualAddress;
-            public PSAPI_WORKING_SET_EX_BLOCK VirtualAttributes;
+            public PsapiWorkingSetExBlock VirtualAttributes;
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct PSAPI_WORKING_SET_EX_BLOCK
+        public struct PsapiWorkingSetExBlock
         {
             /// <summary>The working set information.</summary>
             public UIntPtr Flags;
@@ -211,7 +211,7 @@ namespace Memory
         /// processors in the system, the page size, and other such information.
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 2)]
-        public struct SYSTEM_INFO
+        public struct SystemInfo
         {
             /// <summary>
             /// <para>The processor architecture of the installed operating system. This member can be one of the following values.</para>
@@ -335,7 +335,7 @@ namespace Memory
         /// Contains information about a range of pages in the virtual address space of a process.
         /// The VirtualQuery and VirtualQueryEx functions use this structure.
         /// </summary>
-        public struct MEMORY_BASIC_INFORMATION
+        public struct MemoryBasicInformation
         {
             /// <summary>A pointer to the base address of the region of pages.</summary>
             public IntPtr BaseAddress;
@@ -370,7 +370,7 @@ namespace Memory
             /// The type of pages in the region.
             /// The following types are defined.
             /// </summary>
-            public PageType lType;
+            public PageType LType;
         }
     }
 }
