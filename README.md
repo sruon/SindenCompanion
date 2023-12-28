@@ -17,7 +17,7 @@ I built it for my own arcade cabinet, but it should work for anyone using the Si
 ## What's missing
 - Support for dynamically switching input profiles
   - Have not encountered a game where I need the mouse input but the basis is already implemented
-- Support for dynamically remapping buttons
+- Support for dynamically remapping buttons / offscreen reload
     - Same as above
 - Support for string/float/long/double memory values
     - Not sure if relevant. Though I could see swapping profiles based on a weapon delay between bullets.

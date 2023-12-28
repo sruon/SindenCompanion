@@ -114,3 +114,26 @@ game_profiles:
           0x4: "Auto_Fast" # Auto
           0x5: "Single" # Grenade
           0x0: "Single" # Dead?
+    - name: "Default Dolphin"
+      profile: "Auto_Fast"
+      match:
+        exe: "Dolphin.exe"
+    - name: "Virtua Cop 2"
+      profile: "Single"
+      match:
+        exe: "emulator_multicpu.exe"
+        title: "Virtua Cop 2"
+    - name: "Virtua Cop"
+      profile: "Single"
+      match:
+        exe: "emulator_multicpu.exe"
+        title: "Virtua Cop (Rev A)"
+    - name: "House of the Dead"
+      profile: "Single"
+      match:
+        exe: "emulator_multicpu.exe"
+        title: "House of the Dead"
+    - name: "Default Model2 Emulator"
+      profile: "Single"
+      match:
+        exe: "emulator_multicpu.exe"
